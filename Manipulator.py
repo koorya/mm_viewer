@@ -6,21 +6,31 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import * 
 from opengl_drawing_tools import *
 from Column import *
+import sensor
+from World_Components import *
+
+from stl_loader import *
 
 
-
-class Joint:
+class Joint(Hanger_Component):
 	def __init__(self, color, Theta_f, Alpha, d_f, r, uplimit=100, downlimit = 0):
 		self.uplimit = uplimit
 		self.downlimit = downlimit
 		self.color = color
-		self.q = 0 # dergree or mm
+		self.q = 0 # degree or mm
 		self.al = Alpha # radians
 		self.r = r
 		self.d_funct = d_f
 		self.theta_funct = Theta_f
 		self.H = np.eye(4)
+		self.resMatrix = np.eye(4)
+		self.parent = None
 		self.calcHMatrix()
+		
+	def set_parent_matrix(self, par_matrix):
+		self.resMatrix = np.dot(self.parent.resMatrix, self.H)
+			
+	
 	def __setattr__1(self, name, value):
 		if name == "q":
 			if value <= self.uplimit:
@@ -62,6 +72,20 @@ class Prismatic_Joint(Joint):
 		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
 		glutWireCube(150*2)
 
+class Pusher_Joint(Prismatic_Joint):
+	def draw(self):
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
+		glutSolidCube(15*2)
+		glutSolidCylinder(10, self.d(), 20, 20)
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (0.0, 0.0, 0.0, 1.0))
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
+		glutWireCube(15*2)
+
+class Static_Joint(Joint):
+	def draw(self):
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
+		glutSolidCylinder(20, self.d(), 20, 20)
+
 class Revolute_Joint(Joint):
 	def draw(self):
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
@@ -73,58 +97,164 @@ class Revolute_Joint(Joint):
 		
 		
 class Manipulator:
+
+	sens_list = []
+
 	def __init__(self):
 		global d_1, d_3_c, d_2_1, d_2_2, d_5, H
 		
 		
-#		j1 = Revolute_Joint(green_color, Theta_f=lambda q: np.radians(90-q), Alpha=np.radians(90), d_f=lambda q: 473, r=0)
-		j1 = Revolute_Joint(green_color, Theta_f=lambda q: np.radians(90-q), Alpha=np.radians(90), d_f=lambda q, d=d_1: d, r=0, uplimit = 110, downlimit = -200)
-		j2 = Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-90), d_f=lambda q, d=(d_2_1+d_2_2): d+q, r=0, uplimit = 2920, downlimit = 0)
-		j3 = Prismatic_Joint(blue_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-0), d_f=lambda q, d=d_3_c: d+q, r=0, uplimit = 1777 , downlimit = 0)#1582
-		j4 = Revolute_Joint(yellow_color, Theta_f=lambda q: np.radians(-q), 				Alpha=np.radians(90), d_f=lambda q: 0, r=0, uplimit = 100, downlimit = -100)
-		j5 = Revolute_Joint(pink_color, Theta_f=lambda q: np.radians(q), 				Alpha=np.radians(-90), d_f=lambda q, d=d_5: d, r=0, uplimit = 0, downlimit = -135)		
-		self.joints = [j1, j2, j3, j4, j5]
+		self.append_joints()
 		self.calcMatrixes()
 		self.target = 0
 		self.target_conf = np.array([0, 0, 0, 0, 0])
 		self.delta_config = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 		self.position = np.array([617, 0, H])
 		
-		self.link = Link((0., 0., 0.), (0.0, 0.0, 1.0), 180.0)
-		self.sens_list = []
+		
+		
 		self.active_field = None
+		
+	def append_joints(self):
+		kareta = Revolute_Joint(green_color, Theta_f=lambda q: np.radians(90-q), Alpha=np.radians(90), d_f=lambda q, d=d_1: d, r=0, uplimit = 110, downlimit = -200)
+		link_pantograph = Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-90), d_f=lambda q, d=(d_2_1+d_2_2): d+q, r=0, uplimit = 2920, downlimit = 0)
+		link_carige = Prismatic_Joint(blue_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-0), d_f=lambda q, d=d_3_c: d+q, r=0, uplimit = 1777 , downlimit = 0)#1582
+		wrist = Revolute_Joint(yellow_color, Theta_f=lambda q: np.radians(-q), 				Alpha=np.radians(90), d_f=lambda q: 0, r=0, uplimit = 100, downlimit = -100)
+		link_rotation = Revolute_Joint(pink_color, Theta_f=lambda q: np.radians(q), 				Alpha=np.radians(-90), d_f=lambda q, d=d_5: d, r=0, uplimit = 0, downlimit = -135)		
+
+		column_pantograph = Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(90), d_f=lambda q, d=(-1000): d-q, r=0, uplimit = 2920, downlimit = 0)
+		column_carrige = Prismatic_Joint(yellow_color, Theta_f=lambda q: np.radians(0), 				Alpha=np.radians(90), d_f=lambda q, d=(1000): d-q, r=0, uplimit = 2920, downlimit = 0)
+		
+		
+		left_pusher_rot_handle = Static_Joint(green_color, Theta_f=lambda q: np.radians(90), 				Alpha=np.radians(45), d_f=lambda q: 0, r=0)
+		right_pusher_rot_handle = Static_Joint(red_color, Theta_f=lambda q: np.radians(90), 				Alpha=np.radians(-45), d_f=lambda q: 0, r=0)
+		
+		left_pusher_handle = Static_Joint(green_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-90), d_f=lambda q: 225, r=0)
+		right_pusher_handle = Static_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(90), d_f=lambda q: 225, r=0)
+		
+		left_pusher = Pusher_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(0), d_f=lambda q, d=(50): d-q, r=0)
+		right_pusher = Pusher_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(0), d_f=lambda q, d=(50): d-q, r=0)
+
+
+		sens1 = sensor.Sensor() 
+		sens1.set_location_on_parent(np.array([	[1., 0., 0., 0.],
+												[0., 0., -1., 153.],
+												[0., 1., 0., 1321.],
+												[0., 0., 0., 1.]]))
+
+
+		sens2 = sensor.Sensor() 
+		sens2.set_location_on_parent(np.array([	[1., 0., 0., 0.],
+												[0., 0., -1., 153.],
+												[0., 1., 0., -1321.],
+												[0., 0., 0., 1.]]))
+
+		link_hanger = Link((0., 0., 0.), (0.0, 0.0, 1.0), 180.0)
+
+		some_model = Loaded_Model()
+		some_model.load_model("models/Component5.stl")
+
+		stik_midle = Loaded_Model()
+		stik_midle.load_model("models/Component5_3.stl")
+
+		stik_left = Loaded_Model()
+		stik_left.load_model("models/Component5_1.stl")
+		
+		stik_right = Loaded_Model()
+		stik_right.load_model("models/Component5_2.stl")
+
+		self.joints_tree = 	[kareta, 
+								[link_pantograph, 
+									[link_carige, 
+										[wrist, 
+											[link_rotation,
+												[sens1],
+												[sens2],
+												[link_hanger],
+												[stik_midle],
+												[stik_left],
+												[stik_right]
+												
+											]
+										]
+									]
+								],
+								
+								[column_pantograph, 
+									[column_carrige, 
+										[left_pusher_rot_handle, 
+											[left_pusher_handle, 
+												[left_pusher]
+											]
+										],
+										[right_pusher_rot_handle, 
+											[right_pusher_handle, 
+												[right_pusher]
+											]
+										]
+									]
+								]
+							]
+		def tree_to_list(root, line_list, parent, class_name):
+			
+			for i in root:
+				if not isinstance(i, list):
+					if isinstance(i, class_name):
+						line_list.append(i)
+					i.set_parent(parent)
+					parent = i
+				else:
+					tree_to_list(i, line_list, parent, class_name)
+			return line_list[:]
+		
+		self.all_elements = tree_to_list(self.joints_tree, [], None, World_Component)
+		self.joints = tree_to_list(self.joints_tree, [], None, Joint)
+		self.sens_list = tree_to_list(self.joints_tree, [], None, sensor.Sensor)
+	#	for i in self.joints:
+	#		print i.parent, i
+	#	exit()
 	
+	#	self.append_sensor(sens1)
+	#	self.append_sensor(sens2)
+		
+		
 	def append_sensor(self, sensor):
 		self.sens_list.append(sensor)
+		
+	def setActiveField(self, field):
+		for cur_sens in self.sens_list:
+			cur_sens.reset_measure()		
+		self.active_field = field
 	
 	def calcMatrixes(self):
+
 		for i in self.joints:
 			i.calcHMatrix()
+				
+			
 	def calc_kinematics(self):
 		global mode
-		ofset_matrix = np.array([	[1., 0., 0., self.position[0]],
+		ofset_matrix = np.array([		[1., 0., 0., self.position[0]],
 										[0., 1., 0., self.position[1]],
 										[0., 0., 1., self.position[2]],
-										[0., 0., 0., 1.]])		
+										[0., 0., 0., 1.				 ]])		
 
 		end_point_matrix = ofset_matrix		
 		j = 0
-
-		for i in self.joints:
+		self.joints[0].resMatrix = np.dot(ofset_matrix, self.joints[0].H)
+		for i in self.all_elements:
 			j += 1
-			end_point_matrix = np.dot(end_point_matrix, i.H)
+			i.set_parent()
+		#	end_point_matrix = np.dot(end_point_matrix, i.H)
 		
 	#	end_point_matrix = np.dot(end_point_matrix, ofset_matrix)
 		
-		if self.link is not None:
-			self.link.set_parent_matrix(end_point_matrix)
-		
-		
+	#	if self.link is not None:
+		#	self.link.set_parent_matrix(end_point_matrix)
+				
 		for cur_sens in self.sens_list:
-			cur_sens.set_parent_matrix(end_point_matrix)
 			cur_sens.measure(self.active_field)
-		pass
-	
+
 	def get_sql_sensor_query(self, id=1):
 		dist1 = -1
 		if self.sens_list[0].distance is not None:
@@ -135,51 +265,54 @@ class Manipulator:
 		return "UPDATE sensors SET `sensor1`={0}, `sensor2`={1} WHERE (id = {2})".format(dist1, dist2, id)
 	
 	def draw_end(self):		
-		if self.link is not None:
-			self.link.draw()
-		for cur_sens in self.sens_list:
-			cur_sens.draw()
+
+		pass
+#		if self.link is not None:
+#			self.link.draw()
+	#	for cur_sens in self.sens_list:
+	#		cur_sens.draw()
 
 		
 	def draw(self):
 
 #		draw_grid(1000);
 		glPushMatrix()
-#		glLoadIdentity()
-		glTranslatef(self.position[0], self.position[1], self.position[2])
-		j = 0
 
-		for i in self.joints:
-			j += 1
-#			print "matrix %i"%j
-#			print i.H
-			i.draw()
-			#draw_grid(1000);
-			cur_matrix = np.transpose(glGetFloatv(GL_MODELVIEW_MATRIX))
-			cur_matrix = np.dot(cur_matrix, i.H)
-			glLoadMatrixf(np.transpose(cur_matrix))
+		glPushMatrix()
+		glTranslatef(self.position[0], self.position[1], self.position[2])
+		self.joints[0].draw()
+		glPopMatrix()
+
+		for i in self.all_elements:
+			if isinstance(i.parent, Joint):
+				glPushMatrix()
+				cur_matrix = np.transpose(glGetFloatv(GL_MODELVIEW_MATRIX))
+				cur_matrix = np.dot(cur_matrix, i.parent.resMatrix)
+				glLoadMatrixf(np.transpose(cur_matrix))
+				i.draw()
+				#draw_grid(1000);
+				glPopMatrix()
+			
 
 		#draw_grid(1000);
 
 		self.draw_end()
 		
 		glPopMatrix()
+		
+		
 	def set_pos(self, x_pos):
 		self.position[0] = x_pos
 		
 
 	def setConfig(self, config):
-		j = 0
-		update_flag = 0
-		for i in self.joints:
-			if(i.q != config[j]):
-				update_flag = 1
-			i.q = config[j]
-			j += 1
-		if update_flag == 1:
-			self.calcMatrixes()
-			print "set config res:",self.getConfig()
-			print "set congig res pos", self.getTarget()
+			
+		for idx, val in enumerate(self.joints):
+			if len(config)>idx:
+				val.q = config[idx]
+				val.calcHMatrix()
+
+			
 	def getConfig(self):
 		return np.array([self.joints[0].q,self.joints[1].q,self.joints[2].q,self.joints[3].q,self.joints[4].q])
 	def getTarget(self):
@@ -244,5 +377,4 @@ class Manipulator:
 			return self.moveToTarget_conf()
 		elif self.target == 1:
 			return self.moveToTarget_pos()		
-		
 		

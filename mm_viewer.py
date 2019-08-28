@@ -13,11 +13,11 @@ from Column import Floor
 from Column import Field
 from Column import FilledFloor
 from Column import Link
-import sensor
+
 import Manipulator as mm
 from Constants import *
 from opengl_drawing_tools import *
-
+from stl_loader import *
 
 import time 
 
@@ -26,7 +26,7 @@ import time
 
 np.set_printoptions(precision = 3)
 
-mode = 'sql'
+mode = 'sql_'
 
 #conn = MySQLdb.connect('localhost', 'user2', 'vbtqjpxe', 'my_new_schema')
 conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
@@ -48,18 +48,7 @@ def calback():
 
 
 
-sens1 = sensor.Sensor() 
-sens1.set_location_on_parent(np.array([	[1., 0., 0., 0.],
-										[0., 0., -1., 153.],
-										[0., 1., 0., 1321.],
-										[0., 0., 0., 1.]]))
 
-
-sens2 = sensor.Sensor() 
-sens2.set_location_on_parent(np.array([	[1., 0., 0., 0.],
-										[0., 0., -1., 153.],
-										[0., 1., 0., -1321.],
-										[0., 0., 0., 1.]]))
 
 
 floor1 = Floor((0.0, 0.0, -636.5), (0.0, 0.0, 1.0), 0.0)
@@ -75,9 +64,7 @@ manip = mm.Manipulator()
 res_pos = (-1750.0, 720.5, 652.8, 0.0, 0.0)
 conf = manip.getConfigByTarget(res_pos)
 manip.setConfig(conf)
-manip.active_field = field
-manip.append_sensor(sens1)
-manip.append_sensor(sens2)
+manip.setActiveField(field)
 
 
 #target_x, target_y, target_z, target_theta, target_phi
@@ -368,6 +355,9 @@ eye_dir = np.array([ 0.44871517,  0.48397567, -0.75128041])
 # Процедура перерисовки
 
 
+some_model = Loaded_Model()
+some_model.load_model("models/test.stl")
+
 def draw():
 	global xrot
 	global yrot
@@ -403,7 +393,7 @@ def draw():
 	manip.draw()
 	field.draw()
 
-
+	some_model.draw()
 
 
 	glutSwapBuffers()							

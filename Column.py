@@ -5,13 +5,13 @@ from OpenGL.GL import *
 from OpenGL.GLU import * 
 from OpenGL.GLUT import * 
 from opengl_drawing_tools import *
-
+from World_Components import *
 
 
 
 ###################################################################################		
 		
-class Body():
+class Body(Hanger_Component):
 	def __init__(self, pos, dir, angle, par_matrix = np.eye(4)):
 		self.pos = np.array([pos[0], pos[1], pos[2], 1.0])
 
@@ -264,7 +264,7 @@ class Link(BodyCil):
 		
 		glPushMatrix()
 		glTranslatef(0.0, 0.0, -0.5)
-		glutSolidCylinder(0.5, 1, 20, 20)
+		glutSolidCylinder(0.5, 1, 10, 10)
 		glPopMatrix()
 		
 #		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (0.0, 0.0, 0.0, 1.0))

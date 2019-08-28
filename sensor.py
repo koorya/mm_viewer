@@ -4,10 +4,12 @@ from OpenGL.GL import *
 from OpenGL.GLU import * 
 from OpenGL.GLUT import * 
 from opengl_drawing_tools import *
+from World_Components import *
+
 
 #import Column
 
-class Sensor():
+class Sensor(Mounted_Component):
 	distance = None
 	int_pos = None
 	target_obj = None
@@ -15,6 +17,7 @@ class Sensor():
 	dir = None
 	location_on_parent = np.eye(4)
 	res_location = np.eye(4)
+
 	def __init__(self, pos=(0., 0., 0.), dir=(0., 0., 1.)):
 		self.set_pos(pos)
 		self.set_dir(dir)
@@ -22,6 +25,8 @@ class Sensor():
 		self.target_obj = None
 		pass
 	
+
+
 	def set_location_on_parent(self, matrix):
 		self.location_on_parent = matrix
 		
@@ -94,6 +99,7 @@ class Sensor():
 		if self.target_obj is not None:
 			glPushMatrix()
 			glLoadIdentity()
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, black_color)
 			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (1.0, 0.0, 0.0, 1.0))	
 			glTranslatef(self.int_pos[0], self.int_pos[1], self.int_pos[2])
 			glutSolidSphere(50.0, 10, 10)
