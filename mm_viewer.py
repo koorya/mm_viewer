@@ -355,8 +355,8 @@ eye_dir = np.array([ 0.44871517,  0.48397567, -0.75128041])
 # Процедура перерисовки
 
 
-some_model = Loaded_Model()
-some_model.load_model("models/test.stl")
+#some_model = Loaded_Model()
+#some_model.load_model("models/test.stl")
 
 def draw():
 	global xrot
@@ -393,7 +393,7 @@ def draw():
 	manip.draw()
 	field.draw()
 
-	some_model.draw()
+#	some_model.draw()
 
 
 	glutSwapBuffers()							
