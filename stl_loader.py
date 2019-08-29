@@ -7,14 +7,27 @@ from World_Components import *
 import numpy as np
 #this comment is on both repo
 
+import struct
+
 class Loaded_Model(Mounted_Component):
 	model = []
 	vertexes = []
 	normals = []
 	color = (0.25, 0.35, 0.25, 0.9)
 	
+	def __init__(self, file_name = None, color = "#a55505"):
+		if not file_name is None:
+			self.load_model(file_name)
+		self.color = list(1.*int(color[i:i+2], 16)/0xff for i in (1, 3, 5))
+		self.color.append(0.8)
+	
 	def load_model(self, file_name = 'models/test.stl'):
 		f = open(file_name)
+		if f.read(5) != "solid":
+			f.close()
+			self.load_model_bin(file_name)
+			return 
+			
 		state = "start"
 		a, b, c = (0., 0., 0.)
 
@@ -40,7 +53,40 @@ class Loaded_Model(Mounted_Component):
 					state = word
 		self.transform_vertex_array()
 		self.model = []
+
+	def load_model_bin(self, file_name = 'models/Component1.stl'):
+	
+		data = open(file_name, "rb").read()
 		
+		triangle_count = struct.unpack("I", data[80:84])[0]
+		
+		print "in ", file_name, " triangle count ", triangle_count
+		
+		a, b, c = (0., 0., 0.)
+
+		triangle = []
+		self.model = []
+
+		for i in range(triangle_count):
+			base = 84 + i * 50;
+			
+			(a, b, c) = struct.unpack("fff", data[base:base+12])
+			triangle.append([a, b, c])
+			(a, b, c) = struct.unpack("fff", data[base+12:base+12+12])
+			triangle.append([a, b, c])
+			(a, b, c) = struct.unpack("fff", data[base+12+12:base+12+12+12])
+			triangle.append([a, b, c])
+			(a, b, c) = struct.unpack("fff", data[base+12+12+12:base+12+12+12+12])
+			triangle.append([a, b, c])
+			attr_byte_count = struct.unpack("h", data[base+12+12+12+12:base+12+12+12+12+2])
+			
+			
+			self.model.append(triangle)
+			triangle = []
+
+		self.transform_vertex_array()
+		self.model = []
+
 	def transform_vertex_array(self):
 		self.vertexes = np.empty(len(self.model)*9)
 		self.normals = np.empty(len(self.model)*9)
