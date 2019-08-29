@@ -6,6 +6,7 @@ from opengl_drawing_tools import *
 from World_Components import *
 import numpy as np
 #this comment is on both repo
+
 class Loaded_Model(Mounted_Component):
 	model = []
 	vertexes = []
