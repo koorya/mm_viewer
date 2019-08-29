@@ -151,8 +151,8 @@ class Manipulator:
 
 		link_hanger = Link((0., 0., 0.), (0.0, 0.0, 1.0), 180.0)
 
-		some_model = Loaded_Model()
-		some_model.load_model("models/Component5.stl")
+#		some_model = Loaded_Model()
+#		some_model.load_model("models/Component5.stl")
 
 		stik_midle = Loaded_Model()
 		stik_midle.load_model("models/Component5_3.stl")
@@ -163,7 +163,11 @@ class Manipulator:
 		stik_right = Loaded_Model()
 		stik_right.load_model("models/Component5_2.stl")
 
-		self.joints_tree = 	[kareta, 
+		kareta_model = Loaded_Model()
+		kareta_model.load_model("models/Component18.stl")
+
+		self.joints_tree = 	[kareta,
+								[kareta_model],
 								[link_pantograph, 
 									[link_carige, 
 										[wrist, 
@@ -173,7 +177,7 @@ class Manipulator:
 												[link_hanger],
 												[stik_midle],
 												[stik_left],
-												[stik_right]
+												[stik_right],
 												
 											]
 										]
