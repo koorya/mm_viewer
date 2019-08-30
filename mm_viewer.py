@@ -134,7 +134,7 @@ def mouse_wheel_funct(button, dir, x, y):
 	_phi = np.deg2rad(90 - manip.joints[0].q - manip.joints[3].q)
 	_theta = np.deg2rad(manip.joints[4].q)
 	
-	add_config = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
+	add_config = manip.getConfig()
 	add_pos = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 	
 	key_t = 1
@@ -142,19 +142,19 @@ def mouse_wheel_funct(button, dir, x, y):
 		scale += (0.00001+key_f*0.0001)*dir
 		eye_pos += dir*150*eye_dir
 	elif state == '1':
-		add_config += np.array([(1.0+key_f*10)*dir, 0.0, 0.0, 0.0, 0.0])
+		add_config[0] += (1.0+key_f*10)*dir
 		key_t = 0
 	elif state == '2':
-		add_config += np.array([0.0, (1.0+key_f*10)*dir, 0.0, 0.0, 0.0])
+		add_config[1] += (1.0+key_f*10)*dir
 		key_t = 0
 	elif state == '3':
-		add_config += np.array([0.0, 0.0,(1.0+key_f*10)*dir, 0.0, 0.0])
+		add_config[2] += (1.0+key_f*10)*dir
 		key_t = 0
 	elif state == '4':
-		add_config += np.array([0.0, 0.0, 0.0, (1.0+key_f*10)*dir, 0.0])
+		add_config[3] += (1.0+key_f*10)*dir
 		key_t = 0
 	elif state == '5':
-		add_config += np.array([0.0, 0.0, 0.0, 0.0, (1.0+key_f*10)*dir])
+		add_config[4] += (1.0+key_f*10)*dir
 		key_t = 0
 	elif state == '6':
 		add_pos += np.array([0, 0, 0, (1.0+key_f*10)*dir, 0])
@@ -198,7 +198,7 @@ def mouse_wheel_funct(button, dir, x, y):
 		print "config:", conf
 
 	else:
-		manip.setConfig(manip.getConfig()+add_config)
+		manip.setConfig(add_config)
 		
 #	glutPostRedisplay()
 

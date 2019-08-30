@@ -27,6 +27,8 @@ class Joint(Hanger_Component):
 		self.parent = None
 		self.calcHMatrix()
 		self.model = None
+		self.model_end = None
+		
 		
 	def set_parent_matrix(self, par_matrix):
 		self.resMatrix = np.dot(self.parent.resMatrix, self.H)
@@ -101,28 +103,34 @@ class Kereta_Revolute_Joint(Revolute_Joint):
 		if self.model is None:	
 			self.model = []
 			self.model.append(Loaded_Model("models/Component1_reduce.stl", "#957000"))		
-	
+		if self.model_end is None:	
+			self.model_end = []	
+			self.model_end.append(Loaded_Model("models/Component18.stl", "#161614")) # рама 
+			self.model_end.append(Loaded_Model("models/Component31.stl", "#747061")) #шкаф
+			# self.model_end.append(Loaded_Model("models/Body1.stl", "#957000"))		
+			
 		glPushMatrix()
 		glTranslatef(0.0, 0.0, -520.0)
 		for model in self.model:
 			model.draw()
+
+		glMultMatrixf(np.transpose(self.H))	
+		glRotatef(-90, 1, 0, 0)
+		glRotatef(90, 0, 0, 1)
+		for model in self.model_end:
+			model.draw()
+		
 		glPopMatrix()
 
 class Pantograph_Prismatic_Joint(Prismatic_Joint):
 	def draw(self):
 		if self.model is None:	
 			self.model = []
-			self.model.append(Loaded_Model("models/Component18.stl", "#161614"))
-			self.model.append(Loaded_Model("models/Component31.stl", "#747061"))
-			self.model.append(Loaded_Model("models/Body1.stl", "#957000"))	
 			
-		glPushMatrix()
-		glRotatef(-90, 1, 0, 0)
-		glRotatef(90, 0, 0, 1)
-		glTranslatef(0.0, 0.0, -520.0)
-		for model in self.model:
-			model.draw()
-		glPopMatrix()
+		# glPushMatrix()
+		# for model in self.model:
+			# model.draw()
+		# glPopMatrix()
 
 		glPushMatrix()
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
@@ -136,6 +144,28 @@ class Pantograph_Prismatic_Joint(Prismatic_Joint):
 		glutWireCube(1)
 		glPopMatrix()
 
+class Column_Pantograph_Prismatic_Joint(Prismatic_Joint):
+	def draw(self):
+		if self.model is None:	
+			self.model = []
+			
+		# glPushMatrix()
+		# for model in self.model:
+			# model.draw()
+		# glPopMatrix()
+
+		glPushMatrix()
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
+		glTranslatef(0.0, -520.0, 0.0)
+		glTranslatef(0.0, -200.0, -350)
+		glScalef(400.0, 1300.0, self.d()+600)
+		glTranslatef(0.0, -0.7, 0.5)
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (1.*149/255, 1.*112/255, 0.0, 1.0))
+		glutSolidCube(1)
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (0.0, 0.0, 0.0, 1.0))
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
+		glutWireCube(1)
+		glPopMatrix()
 		
 class link_rotation_Revolute_Joint(Revolute_Joint):
 	def draw(self):
@@ -192,6 +222,45 @@ class link_carige_Prismatic_Joint(Prismatic_Joint):
 			model.draw()
 		glPopMatrix()
 		
+class column_carige_Prismatic_Joint(Prismatic_Joint):
+	def draw(self):
+		if self.model is None:	
+			self.model = []
+			self.model.append(Loaded_Model("models/Component20.stl", "#051520"))
+
+
+		draw_grid(1000)
+
+		
+		glPushMatrix()
+		glRotatef(90, 0, 0, 1)
+		glRotatef(180, 0, 1, 0)
+		glTranslatef(-780.0, 0.0, -520.0)
+#		glTranslatef(0.0, 0.0, 500.0)
+		for model in self.model:
+			model.draw()
+		glPopMatrix()		
+	
+class column_hanger_Joint(Joint):
+	def draw(self):
+		if self.model is None:	
+			self.model = []
+			self.model.append(Loaded_Model("models/Component40.stl", "#2D728C"))
+
+
+		draw_grid(1000)
+
+		
+		glPushMatrix()
+		glRotatef(90, 1, 0, 0)
+		glRotatef(90, 0, 0, 1)
+		glTranslatef(-780.0, 0.0, 500.0)
+#		glTranslatef(0.0, 0.0, 500.0)
+		for model in self.model:
+			model.draw()
+		glPopMatrix()		
+		
+	#	
 		
 class Manipulator:
 
@@ -219,9 +288,11 @@ class Manipulator:
 		wrist = wrist_Revolute_Joint(yellow_color, Theta_f=lambda q: np.radians(-q), 				Alpha=np.radians(90), d_f=lambda q: 0, r=0, uplimit = 100, downlimit = -100)
 		link_rotation = link_rotation_Revolute_Joint(pink_color, Theta_f=lambda q: np.radians(q), 				Alpha=np.radians(-90), d_f=lambda q, d=d_5: d, r=0, uplimit = 0, downlimit = -135)		
 
-		column_pantograph = Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(90), d_f=lambda q, d=(-1000): d-q, r=0, uplimit = 2920, downlimit = 0)
-		column_carrige = Prismatic_Joint(yellow_color, Theta_f=lambda q: np.radians(0), 				Alpha=np.radians(90), d_f=lambda q, d=(1000): d-q, r=0, uplimit = 2920, downlimit = 0)
+		column_pantograph = Column_Pantograph_Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(90), d_f=lambda q, d=100: -d-q, r=0, uplimit = 2920, downlimit = 0)
+		column_carrige = column_carige_Prismatic_Joint(yellow_color, Theta_f=lambda q: np.radians(0), 				Alpha=np.radians(90), d_f=lambda q, d=(1000): d-q, r=0, uplimit = 2920, downlimit = 0)
 		
+		
+		column_handle = column_hanger_Joint(yellow_color, Theta_f=lambda q: np.radians(0), 				Alpha=np.radians(0), d_f=lambda q, d=(1000): 0, r=0)
 		
 		left_pusher_rot_handle = Static_Joint(green_color, Theta_f=lambda q: np.radians(90), 				Alpha=np.radians(45), d_f=lambda q: 0, r=0)
 		right_pusher_rot_handle = Static_Joint(red_color, Theta_f=lambda q: np.radians(90), 				Alpha=np.radians(-45), d_f=lambda q: 0, r=0)
@@ -259,6 +330,7 @@ class Manipulator:
 		
 		stik_right = Loaded_Model("models/Component5_2.stl", "#2D728C")
 
+		  
 
 
 		self.joints_tree = 	[kareta,
@@ -280,6 +352,7 @@ class Manipulator:
 								
 								[column_pantograph, 
 									[column_carrige, 
+										[column_handle, [Column((0, 2550, 450/1.4), (0.0, -1.0, 0.0), 0.0)]],
 										[left_pusher_rot_handle, 
 											[left_pusher_handle, 
 												[left_pusher]
@@ -293,6 +366,17 @@ class Manipulator:
 									]
 								]
 							]
+		
+		self.driven_joints = [
+								kareta, 
+								column_pantograph, 
+								column_carrige,
+								wrist, 
+								link_rotation, 
+								link_pantograph, 
+								link_carige
+							]
+		
 		def tree_to_list(root, line_list, parent, class_name):
 			
 			for i in root:
@@ -307,6 +391,7 @@ class Manipulator:
 		
 		self.all_elements = tree_to_list(self.joints_tree, [], None, World_Component)
 		self.joints = tree_to_list(self.joints_tree, [], None, Joint)
+		
 		self.sens_list = tree_to_list(self.joints_tree, [], None, sensor.Sensor)
 	#	for i in self.joints:
 	#		print i.parent, i
@@ -405,14 +490,17 @@ class Manipulator:
 
 	def setConfig(self, config):
 			
-		for idx, val in enumerate(self.joints):
+		for idx, val in enumerate(self.driven_joints):
 			if len(config)>idx:
 				val.q = config[idx]
 				val.calcHMatrix()
 
 			
 	def getConfig(self):
-		return np.array([self.joints[0].q,self.joints[1].q,self.joints[2].q,self.joints[3].q,self.joints[4].q])
+
+		return list(joint.q for joint in self.driven_joints)
+		
+		
 	def getTarget(self):
 		cur_vec = np.array([0, 0, 0, 1])
 		for i in reversed(self.joints):
