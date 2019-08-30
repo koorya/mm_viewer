@@ -6,13 +6,8 @@ import sys
 import numpy as np
 import MySQLdb
 
-from Column import Body
-from Column import Column
-from Column import Petal
-from Column import Floor
-from Column import Field
-from Column import FilledFloor
-from Column import Link
+from Column import *
+
 
 import Manipulator as mm
 from Constants import *
@@ -26,7 +21,7 @@ import time
 
 np.set_printoptions(precision = 3)
 
-mode = 'sql'
+mode = 'sql_'
 
 #conn = MySQLdb.connect('localhost', 'user2', 'vbtqjpxe', 'my_new_schema')
 conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
@@ -53,11 +48,11 @@ def calback():
 
 floor1 = Floor((0.0, 0.0, -636.5), (0.0, 0.0, 1.0), 0.0)
 floor2 = FilledFloor((0.0, 0.0, -636.5 - 3000.0), (0.0, 0.0, 1.0), 0.0)
-field = Field((0.0, 0.0, 0.0), (0.0, 0.0, 1.0), 0.0)
+field = FieldDB((0.0, 0.0, 0.0), (0.0, 0.0, 1.0), 0.0)
 field.append_child(floor1)
 field.append_child(floor2)
 
-
+#field.append_child(LinkSloped((-1750, 0, 0), (1, 0, 0), 180.0))
 
 
 manip = mm.Manipulator()
@@ -81,11 +76,11 @@ time_stamp = time.time()
 call_cnt = 0
 
 def timercallback(value):
-	global manip, mode, conn, time_stamp, call_cnt, id
+	global manip, mode, conn, time_stamp, call_cnt, id, field
 
 
 
-	if mode== 'sql':
+	if mode== 'sql':	
 #		conn = MySQLdb.connect('localhost', 'user1', 'vbtqjpxe', 'my_new_schema')
 		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
 		cursor = conn.cursor()
@@ -117,6 +112,9 @@ def timercallback(value):
 	'''
 	
 	call_cnt += 1
+	if (call_cnt % 10 == 0):
+		field.updateByDB()
+		
 	if (call_cnt % 500 == 0):
 		print "time: ", (time.time()-time_stamp)/500.
 		time_stamp = time.time()

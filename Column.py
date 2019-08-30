@@ -1,5 +1,6 @@
 # This Python file uses the following encoding: utf-8
 import numpy as np
+import MySQLdb
 import intersection
 from OpenGL.GL import * 
 from OpenGL.GLU import * 
@@ -185,6 +186,51 @@ class Field(Floor):
 	def draw_self(self):
 		pass
 	
+class FieldDB(Field):
+	db_link_list = []
+	def updateByDB(self):
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+		cursor = conn.cursor()
+		query_str = "SELECT `id` FROM Links"
+		print query_str
+		cursor.execute(query_str)
+		conn.close()
+		server_id_list = list(i[0] for i in cursor.fetchall())
+		print server_id_list
+		add_id_list = list(item for item in set(server_id_list).difference( list( db_link[0] for db_link in self.db_link_list) ) )
+		print add_id_list
+		rm_id_list = list(item for item in set(list( db_link[0] for db_link in self.db_link_list)).difference( server_id_list ) )
+		print rm_id_list
+		
+		for rm_id in rm_id_list:
+			for db_link in self.db_link_list[:]:
+				if db_link[0] == rm_id:
+					self.children_list.remove(db_link[1])
+					self.db_link_list.remove(db_link)
+		
+
+		if len(add_id_list)>0:
+			id_str = "{0}".format(add_id_list[0])
+			for i in add_id_list[1:]:
+				id_str += ", {0}".format(i)
+
+			conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+			cursor = conn.cursor()
+			query_str = "SELECT `id`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`, `type` FROM Links WHERE id IN ({0})".format(id_str)
+			print query_str
+			cursor.execute(query_str)
+			conn.close()
+			for add_id_link in cursor.fetchall():
+				new_link = None
+				if add_id_link[8] == "horisontal":
+					new_link = LinkSloped((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])
+				else:
+					new_link = Link((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])					
+				self.append_child(new_link)
+				self.db_link_list.append([add_id_link[0], new_link])
+		
+		
+		pass
 	
 class FilledFloor(Floor):
 	def child_constr(self):
