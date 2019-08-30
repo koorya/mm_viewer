@@ -74,7 +74,10 @@ class Prismatic_Joint(Joint):
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (0.0, 0.0, 0.0, 1.0))
 		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
 		glutWireCube(150*2)
-
+	def draw(self):
+		draw_grid(1000)
+		
+		
 class Pusher_Joint(Prismatic_Joint):
 	def draw_(self):
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
@@ -90,6 +93,8 @@ class Static_Joint(Joint):
 		glutSolidCylinder(20, self.d(), 20, 20)
 
 class Revolute_Joint(Joint):
+	def draw(self):
+		draw_grid(1000)
 	def draw_(self):
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
 		glPushMatrix()
@@ -98,11 +103,11 @@ class Revolute_Joint(Joint):
 		glPopMatrix()
 		glutSolidCylinder(100, self.d(), 20, 20)
 
-class Kereta_Revolute_Joint(Revolute_Joint):
+class Tower_Revolute_Joint(Revolute_Joint):
 	def draw(self):
 		if self.model is None:	
 			self.model = []
-			self.model.append(Loaded_Model("models/Component1_reduce.stl", "#957000"))		
+	
 		if self.model_end is None:	
 			self.model_end = []	
 			self.model_end.append(Loaded_Model("models/Component18.stl", "#161614")) # рама 
@@ -110,18 +115,70 @@ class Kereta_Revolute_Joint(Revolute_Joint):
 			# self.model_end.append(Loaded_Model("models/Body1.stl", "#957000"))		
 			
 		glPushMatrix()
-		glTranslatef(0.0, 0.0, -520.0)
+		glRotatef(90, 0, 0, 1)
+		glTranslatef(0.0, 0.0, -428.0)
+		for model in self.model:
+			model.draw()
+
+		glMultMatrixf(np.transpose(self.H))	
+		glRotatef(-90, 1, 0, 0)
+#		glRotatef(90, 0, 0, 1)
+		for model in self.model_end:
+			model.draw()
+		
+		glPopMatrix()
+		
+class Kareta_Prismatic_Joint(Prismatic_Joint):
+	def draw(self):
+		if self.model is None:	
+			self.model = []
+			
+		if self.model_end is None:	
+			self.model_end = []	
+			self.model_end.append(Loaded_Model("models/Component1_reduce.stl", "#957000"))	
+
+			
+		glPushMatrix()
+#		glRotatef(90, 0, 0, 1)
+
+		for model in self.model:
+			model.draw()
+
+		glMultMatrixf(np.transpose(self.H))	
+#		glRotatef(-90, 1, 0, 0)
+		glRotatef(90, 0, 0, 1)
+		glTranslatef(0.0, 0.0, -428.0)
+		# draw_grid(1000)
+		for model in self.model_end:
+			model.draw()
+		
+		glPopMatrix()
+
+class Jack_Prismatic_Joint(Prismatic_Joint):
+	def draw(self):
+		if self.model is None:	
+			self.model = []
+			
+		if self.model_end is None:	
+			self.model_end = []	
+			self.model_end.append(Loaded_Model("models/Component129.stl", "#6F9416"))	
+
+			
+		glPushMatrix()
+#		glRotatef(90, 0, 0, 1)
+
 		for model in self.model:
 			model.draw()
 
 		glMultMatrixf(np.transpose(self.H))	
 		glRotatef(-90, 1, 0, 0)
 		glRotatef(90, 0, 0, 1)
+		glTranslatef(-3000.0, 0.0, 0.0)
+		# draw_grid(1000)
 		for model in self.model_end:
 			model.draw()
 		
 		glPopMatrix()
-
 class Pantograph_Prismatic_Joint(Prismatic_Joint):
 	def draw(self):
 		if self.model is None:	
@@ -134,7 +191,7 @@ class Pantograph_Prismatic_Joint(Prismatic_Joint):
 
 		glPushMatrix()
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
-		glTranslatef(0.0, -520.0, 0.0)
+		glTranslatef(0.0, -428.0, 0.0)
 		glScalef(600.0, 2500.0, self.d()-350)
 		glTranslatef(0.0, -0.5, 0.5)
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (1.*149/255, 1.*112/255, 0.0, 1.0))
@@ -156,7 +213,7 @@ class Column_Pantograph_Prismatic_Joint(Prismatic_Joint):
 
 		glPushMatrix()
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, self.color)
-		glTranslatef(0.0, -520.0, 0.0)
+		glTranslatef(0.0, -428.0, 0.0)
 		glTranslatef(0.0, -200.0, -350)
 		glScalef(400.0, 1300.0, self.d()+600)
 		glTranslatef(0.0, -0.7, 0.5)
@@ -216,7 +273,7 @@ class link_carige_Prismatic_Joint(Prismatic_Joint):
 		glPopMatrix()
 		glPushMatrix()
 		glRotatef(-90, 0, 0, 1)
-		glTranslatef(-639.0, 0.0, -520.0)
+		glTranslatef(-639.0, 0.0, -428.0)
 		glRotatef(180, 0, 0, 1)
 		for model in self.model:
 			model.draw()
@@ -229,13 +286,13 @@ class column_carige_Prismatic_Joint(Prismatic_Joint):
 			self.model.append(Loaded_Model("models/Component20.stl", "#051520"))
 
 
-		draw_grid(1000)
+		# draw_grid(1000)
 
 		
 		glPushMatrix()
 		glRotatef(90, 0, 0, 1)
 		glRotatef(180, 0, 1, 0)
-		glTranslatef(-780.0, 0.0, -520.0)
+		glTranslatef(-780.0, 0.0, -428.0)
 #		glTranslatef(0.0, 0.0, 500.0)
 		for model in self.model:
 			model.draw()
@@ -248,7 +305,7 @@ class column_hanger_Joint(Joint):
 			self.model.append(Loaded_Model("models/Component40.stl", "#2D728C"))
 
 
-		draw_grid(1000)
+		# draw_grid(1000)
 
 		
 		glPushMatrix()
@@ -275,33 +332,29 @@ class Manipulator:
 		self.target = 0
 		self.target_conf = np.array([0, 0, 0, 0, 0])
 		self.delta_config = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
-		self.position = np.array([617, 0, H])
+#		self.position = np.array([617, 0, H])
+		self.position = np.array([0, 0, 0])
 		
 		
 		
 		self.active_field = None
 		
 	def append_joints(self):
-		kareta = Kereta_Revolute_Joint(green_color, Theta_f=lambda q: np.radians(90-q), Alpha=np.radians(90), d_f=lambda q, d=d_1: d, r=0, uplimit = 110, downlimit = -200)
+		jack = Jack_Prismatic_Joint(green_color, Theta_f=lambda q: np.radians(90), Alpha=np.radians(90), d_f=lambda q, d=0: q, r=0)
+		kareta = Kareta_Prismatic_Joint(green_color, Theta_f=lambda q: np.radians(0), Alpha=np.radians(-90), d_f=lambda q, d=0: q, r=0)
+		
+		tower = Tower_Revolute_Joint(green_color, Theta_f=lambda q: np.radians(q), Alpha=np.radians(90), d_f=lambda q, d=d_1: d, r=0, uplimit = 110, downlimit = -200)
 		link_pantograph = Pantograph_Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-90), d_f=lambda q, d=(d_2_1+d_2_2): d+q, r=0, uplimit = 2920, downlimit = 0)
 		link_carige = link_carige_Prismatic_Joint(blue_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-0), d_f=lambda q, d=d_3_c: d+q, r=0, uplimit = 1777 , downlimit = 0)#1582
 		wrist = wrist_Revolute_Joint(yellow_color, Theta_f=lambda q: np.radians(-q), 				Alpha=np.radians(90), d_f=lambda q: 0, r=0, uplimit = 100, downlimit = -100)
 		link_rotation = link_rotation_Revolute_Joint(pink_color, Theta_f=lambda q: np.radians(q), 				Alpha=np.radians(-90), d_f=lambda q, d=d_5: d, r=0, uplimit = 0, downlimit = -135)		
 
-		column_pantograph = Column_Pantograph_Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(90), d_f=lambda q, d=100: -d-q, r=0, uplimit = 2920, downlimit = 0)
-		column_carrige = column_carige_Prismatic_Joint(yellow_color, Theta_f=lambda q: np.radians(0), 				Alpha=np.radians(90), d_f=lambda q, d=(1000): d-q, r=0, uplimit = 2920, downlimit = 0)
+		column_pantograph = Column_Pantograph_Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(90), d_f=lambda q, d=780: -d-q, r=0, uplimit = 2920, downlimit = 0)
+		column_carrige = column_carige_Prismatic_Joint(yellow_color, Theta_f=lambda q: np.radians(0), 				Alpha=np.radians(90), d_f=lambda q, d=(1021.5): d-q, r=0, uplimit = 2920, downlimit = 0)
 		
 		
-		column_handle = column_hanger_Joint(yellow_color, Theta_f=lambda q: np.radians(0), 				Alpha=np.radians(0), d_f=lambda q, d=(1000): 0, r=0)
+		column_handle = column_hanger_Joint(yellow_color, Theta_f=lambda q: np.radians(0), 				Alpha=np.radians(0), d_f=lambda q: 0, r=0)
 		
-		left_pusher_rot_handle = Static_Joint(green_color, Theta_f=lambda q: np.radians(90), 				Alpha=np.radians(45), d_f=lambda q: 0, r=0)
-		right_pusher_rot_handle = Static_Joint(red_color, Theta_f=lambda q: np.radians(90), 				Alpha=np.radians(-45), d_f=lambda q: 0, r=0)
-		
-		left_pusher_handle = Static_Joint(green_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-90), d_f=lambda q: 225, r=0)
-		right_pusher_handle = Static_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(90), d_f=lambda q: 225, r=0)
-		
-		left_pusher = Pusher_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(0), d_f=lambda q, d=(50): d-q, r=0)
-		right_pusher = Pusher_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(0), d_f=lambda q, d=(50): d-q, r=0)
 
 
 		sens1 = sensor.Sensor() 
@@ -333,34 +386,29 @@ class Manipulator:
 		  
 
 
-		self.joints_tree = 	[kareta,
-								[link_pantograph, 
-									[link_carige, 
-										[wrist, 
-											[link_rotation,
-												[sens1],
-												[sens2],
-												[link_hanger],
-												[stik_midle],
-												[stik_left],
-												[stik_right],
-												
-											]
-										]
-									]
-								],
-								
-								[column_pantograph, 
-									[column_carrige, 
-										[column_handle, [Column((0, 2550, 450/1.4), (0.0, -1.0, 0.0), 0.0)]],
-										[left_pusher_rot_handle, 
-											[left_pusher_handle, 
-												[left_pusher]
+		self.joints_tree = 	[
+							jack,
+								[kareta,
+									[tower,
+										[link_pantograph, 
+											[link_carige, 
+												[wrist, 
+													[link_rotation,
+														[sens1],
+														[sens2],
+														[link_hanger],
+														[stik_midle],
+														[stik_left],
+														[stik_right],
+														
+													]
+												]
 											]
 										],
-										[right_pusher_rot_handle, 
-											[right_pusher_handle, 
-												[right_pusher]
+										
+										[column_pantograph, 
+											[column_carrige, 
+												[column_handle, [Column((0, 2550, 450/1.4), (0.0, -1.0, 0.0), 0.0)]]
 											]
 										]
 									]
@@ -368,14 +416,25 @@ class Manipulator:
 							]
 		
 		self.driven_joints = [
-								kareta, 
-								column_pantograph, 
-								column_carrige,
+								jack,
+								kareta,
+								tower, 
+								link_pantograph, 
+								link_carige,
 								wrist, 
 								link_rotation, 
-								link_pantograph, 
-								link_carige
+								column_pantograph, 
+								column_carrige
 							]
+		self.driven_joints_name = """jack
+								kareta
+								tower
+								link_pantograph
+								link_carige
+								wrist
+								link_rotation
+								column_pantograph
+								column_carrige""".split()					
 		
 		def tree_to_list(root, line_list, parent, class_name):
 			

@@ -63,6 +63,10 @@ field.append_child(floor2)
 manip = mm.Manipulator()
 res_pos = (-1750.0, 720.5, 652.8, 0.0, 0.0)
 conf = manip.getConfigByTarget(res_pos)
+conf = np.zeros(10)
+conf[0] = H
+conf[1] = 617
+
 manip.setConfig(conf)
 manip.setActiveField(field)
 
@@ -157,8 +161,20 @@ def mouse_wheel_funct(button, dir, x, y):
 		add_config[4] += (1.0+key_f*10)*dir
 		key_t = 0
 	elif state == '6':
-		add_pos += np.array([0, 0, 0, (1.0+key_f*10)*dir, 0])
+		add_config[5] += (1.0+key_f*10)*dir
+		key_t = 0
 	elif state == '7':
+		add_config[6] += (1.0+key_f*10)*dir
+		key_t = 0
+	elif state == '8':
+		add_config[7] += (1.0+key_f*10)*dir
+		key_t = 0
+	elif state == '9':
+		add_config[8] += (1.0+key_f*10)*dir
+		key_t = 0
+	elif state == '-':
+		add_pos += np.array([0, 0, 0, (1.0+key_f*10)*dir, 0])
+	elif state == '=':
 		add_pos += np.array([0, 0, 0, 0, (1.0+key_f*10)*dir])
 	elif state == 'x':
 		add_pos += np.array([(1.0+key_f*10)*dir, 0, 0,0, 0])

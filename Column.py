@@ -158,13 +158,13 @@ class Floor(Body):
 		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, (0.0, 0.0, 0.0, 1.0))	
 		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (0.5, 0.5, 0.5, 1.0))
 	#	glBegin(GL_QUADS)
-		glBegin(GL_LINES)
-		glNormal3f(0.0, 0.0, 1.0);
-		glVertex3f(-floor_size, -floor_size, -200.0)
-		glVertex3f(-floor_size, floor_size,  -200.0)
-		glVertex3f(floor_size, floor_size,  -200.0)
-		glVertex3f(floor_size, -floor_size,  -200.0)
-		glEnd()
+		# glBegin(GL_LINES)
+		# glNormal3f(0.0, 0.0, 1.0);
+		# glVertex3f(-floor_size, -floor_size, -200.0)
+		# glVertex3f(-floor_size, floor_size,  -200.0)
+		# glVertex3f(floor_size, floor_size,  -200.0)
+		# glVertex3f(floor_size, -floor_size,  -200.0)
+		# glEnd()
 		glPopMatrix()
 	def does_intersect_exist(self, ray_pos, ray_dir):
 		intersection = None
@@ -280,7 +280,49 @@ class LinkSloped(Link):
 		
 				
 		
+class Column_Stock(BodyCil):
+	def child_constr(self):
+		pass
+
 		
+	def set_shape(self):
+		"""
+		self.own_shape_matrix = np.eye(4)
+		glMatrixMode(GL_MODELVIEW)
+		glPushMatrix()
+		glLoadIdentity()
+		glScalef(127, 127, 2420)
+		self.own_shape_matrix = np.transpose(glGetFloatv(GL_MODELVIEW_MATRIX))
+		glPopMatrix()
+		"""
+		heigh = 150.
+		self.own_shape_matrix = np.array([[50.,   0.,   0.,   0.],
+											[  0., 50.,   0.,   0.],
+											[  0.,   0.,   heigh,   heigh/2],
+											[  0.,   0.,   0.,  1.]])
+		
+		
+		pass
+	def draw_self(self):
+		glPushMatrix()
+		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
+#		glRotatef(45, 0, 0, 1)
+#		glScalef(450, 450, 3000)
+#		glTranslatef(0, 0, 0.5)
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (0.25, 0.25, 0.25, 0.9))
+		
+		glPushMatrix()
+		glTranslatef(0.0, 0.0, -0.5)
+		glutSolidCylinder(0.5, 1, 10, 10)
+		glPopMatrix()
+		
+#		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (0.0, 0.0, 0.0, 1.0))
+#		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
+#		glutWireCube(1.0)
+		
+		glPopMatrix()
+
+
 class Column(Body):
 	
 	def child_constr(self):
@@ -301,7 +343,8 @@ class Column(Body):
 		self.append_child(Bond((258.0, 0.0, 2950.0), (0.0, 0.0, 1.0), 0.0))
 		self.append_child(Bond((-258.0, 0.0, 2950.0), (0.0, 0.0, 1.0), 180.0))
 		self.append_child(Bond((0.0, 258.0, 2950.0), (0.0, 0.0, 1.0), 90.0))
-		self.append_child(Bond((0.0, -258.0, 2950.0), (0.0, 0.0, 1.0), -90.0))		
+		self.append_child(Bond((0.0, -258.0, 2950.0), (0.0, 0.0, 1.0), -90.0))
+		self.append_child(Column_Stock((0.0, 0.0, 3000.0), (0.0, 0.0, 1.0), -90.0))
 
 
 	def set_shape(self):
