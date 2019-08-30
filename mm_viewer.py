@@ -26,7 +26,7 @@ import time
 
 np.set_printoptions(precision = 3)
 
-mode = 'sql_'
+mode = 'sql'
 
 #conn = MySQLdb.connect('localhost', 'user2', 'vbtqjpxe', 'my_new_schema')
 conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
@@ -64,7 +64,7 @@ manip = mm.Manipulator()
 res_pos = (-1750.0, 720.5, 652.8, 0.0, 0.0)
 conf = manip.getConfigByTarget(res_pos)
 conf = np.zeros(10)
-conf[0] = H
+conf[0] = H #2618.5
 conf[1] = 617
 
 manip.setConfig(conf)
@@ -89,11 +89,18 @@ def timercallback(value):
 #		conn = MySQLdb.connect('localhost', 'user1', 'vbtqjpxe', 'my_new_schema')
 		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
 		cursor = conn.cursor()
-		cursor.execute("SELECT `q1`, `q2`, `q3`, `q4`, `q5`, `q6` FROM configuration WHERE (id = {0})".format(id))
+		
+		col_name_list = manip.driven_joints_name
+		col_name_str = "`{0}`".format(col_name_list[0])
+		for i in col_name_list[1:]:
+			col_name_str += ", `{0}`".format(i)
+		query_str = "SELECT {0} FROM configuration_new WHERE (id = {1})".format(col_name_str, id)
+#		print query_str
+		cursor.execute(query_str)
 		# Получаем данные.
 		row = cursor.fetchone()
-		manip.setConfig(row[:5])
-		manip.set_pos(row[5])
+		manip.setConfig(row)
+#		manip.set_pos(row[5])
 #		print "q1: ",row[0], "q2: ",row[1], "q3: ",row[2], "q4: ",row[3], "q5: ",row[4]
 		conn.close()
 #		print manip.getTarget();
