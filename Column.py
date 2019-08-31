@@ -37,8 +37,8 @@ class Body(Hanger_Component):
 								[0, 	0, 	0, 1]])
 
 		self.own_shape_matrix = np.eye(4)
-#		self.fw_matrix = np.eye(4)
-##		self.fw_shape_matrix = np.eye(4)		
+	#	self.resMatrix = np.eye(4)
+		self.fw_shape_matrix = np.eye(4)		
 		
 		"""
 		self.own_matrix = np.array([[c*e, -f, -d*e, self.pos[0]],
@@ -66,18 +66,18 @@ class Body(Hanger_Component):
 		pass
 		
 	def set_parent_matrix(self, par_matrix):
-		self.fw_matrix = np.dot(par_matrix, self.own_matrix)
-		self.inv_matrix = np.linalg.inv(self.fw_matrix)
+		self.resMatrix = np.dot(par_matrix, self.own_matrix)
+		self.inv_matrix = np.linalg.inv(self.resMatrix)
 		
-		self.fw_shape_matrix = np.dot(self.fw_matrix, self.own_shape_matrix)
+		self.fw_shape_matrix = np.dot(self.resMatrix, self.own_shape_matrix)
 		self.inv_shape_matrix = np.linalg.inv(self.fw_shape_matrix)
 		
 		for i in self.children_list:
-			i.set_parent_matrix(self.fw_matrix)
+			i.set_parent_matrix(self.resMatrix)
 	
 	def append_child(self, child):
 		self.children_list.append(child)
-		child.set_parent_matrix(self.fw_matrix)
+		child.set_parent_matrix(self.resMatrix)
 		
 	def draw_self(self):
 		pass
@@ -224,12 +224,12 @@ class FieldDB(Field):
 				new_link = None
 				if add_id_link[8] == "horisontal":
 					new_link = LinkSloped((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])
-				else:
-					new_link = Link((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])					
+				elif add_id_link[8] == "diagonal":
+					new_link = Link((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])			
+				elif add_id_link[8] == "column":
+					new_link = Column((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])							
 				self.append_child(new_link)
 				self.db_link_list.append([add_id_link[0], new_link])
-		
-		
 		pass
 	
 class FilledFloor(Floor):

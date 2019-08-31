@@ -31,7 +31,7 @@ class Joint(Hanger_Component):
 		
 		
 	def set_parent_matrix(self, par_matrix):
-		self.resMatrix = np.dot(self.parent.resMatrix, self.H)
+		self.resMatrix = np.dot(par_matrix, self.H)
 			
 	
 	def __setattr__1(self, name, value):
@@ -288,7 +288,13 @@ class column_carige_Prismatic_Joint(Prismatic_Joint):
 
 		# draw_grid(1000)
 
-		
+		if self.model_end is None:	
+			self.model_end = []
+			self.model_end.append(Loaded_Model("models/Component40.stl", "#2D728C"))
+
+
+		# draw_grid(1000)
+
 		glPushMatrix()
 		glRotatef(90, 0, 0, 1)
 		glRotatef(180, 0, 1, 0)
@@ -296,28 +302,69 @@ class column_carige_Prismatic_Joint(Prismatic_Joint):
 #		glTranslatef(0.0, 0.0, 500.0)
 		for model in self.model:
 			model.draw()
-		glPopMatrix()		
-	
-class column_hanger_Joint(Joint):
-	def draw(self):
-		if self.model is None:	
-			self.model = []
-			self.model.append(Loaded_Model("models/Component40.stl", "#2D728C"))
+		glPopMatrix()	
 
-
-		# draw_grid(1000)
-
-		
 		glPushMatrix()
+		glMultMatrixf(np.transpose(self.H))
 		glRotatef(90, 1, 0, 0)
 		glRotatef(90, 0, 0, 1)
 		glTranslatef(-780.0, 0.0, 500.0)
 #		glTranslatef(0.0, 0.0, 500.0)
-		for model in self.model:
+		for model in self.model_end:
 			model.draw()
-		glPopMatrix()		
+		glPopMatrix()	
 		
-	#	
+
+class Hanger_Joint(Joint):
+	is_active = 0
+	hanged_obj = Mounted_Component()
+	type = "empty"
+	def pick_up(self):
+		self.is_active = 1
+	def drop(self):
+		if self.is_active == 0:
+			return
+		self.is_active = 0
+		matrix = self.hanged_obj.resMatrix
+		print matrix
+		pos = np.transpose(matrix)[3:][0][:3]
+		print pos
+		dir = np.transpose(matrix)[2:3][0][:3]
+		print dir
+		angle = -np.rad2deg(np.arctan2(matrix[0][0], matrix[1][0]))
+		print angle
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')		
+		cursor = conn.cursor()
+		query_str = "INSERT INTO Links (`type`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`) VALUES ('{7}', {0}, {1}, {2}, {3}, {4}, {5}, {6})".format(pos[0], pos[1], pos[2], dir[0], dir[1], dir[2], angle, self.type)
+		cursor.execute(query_str)
+		conn.commit()
+		conn.close()
+		
+	def switch_state(self):
+		if self.is_active == 1:
+			self.drop()
+		else:
+			self.pick_up()
+			
+	def draw(self):
+		if self.is_active == 1:
+			self.hanged_obj.draw()
+		
+	def set_parent_matrix(self, par_matrix):
+		self.resMatrix = par_matrix
+		self.hanged_obj.set_parent(self)		
+		
+	
+	
+class column_hanger_Joint(Hanger_Joint):
+	hanged_obj = Column((0, 2550, 450/1.4), (0.0, -1.0, 0.0), 0.0)
+	type = "column"
+
+class link_hanger_Joint(Hanger_Joint):
+	hanged_obj = Link((0., 0., 0.), (0.0, 0.0, 1.0), 180.0)
+	type = "diagonal"
+
+		
 		
 class Manipulator:
 
@@ -370,7 +417,8 @@ class Manipulator:
 												[0., 1., 0., -1321.],
 												[0., 0., 0., 1.]]))
 
-		link_hanger = Link((0., 0., 0.), (0.0, 0.0, 1.0), 180.0)
+		link_hanger = link_hanger_Joint(yellow_color, Theta_f=lambda q: np.radians(0), Alpha=np.radians(0), d_f=lambda q: 0, r=0)
+		
 
 #		some_model = Loaded_Model()
 #		some_model.load_model("models/Component5.stl")
@@ -408,7 +456,7 @@ class Manipulator:
 										
 										[column_pantograph, 
 											[column_carrige, 
-												[column_handle, [Column((0, 2550, 450/1.4), (0.0, -1.0, 0.0), 0.0)]]
+												[column_handle]#, [Column((0, 2550, 450/1.4), (0.0, -1.0, 0.0), 0.0)]]
 											]
 										]
 									]
@@ -435,6 +483,8 @@ class Manipulator:
 								link_rotation
 								column_pantograph
 								column_carrige""".split()					
+		
+		self.hanger_joints = [link_hanger, column_handle]
 		
 		def tree_to_list(root, line_list, parent, class_name):
 			
@@ -516,6 +566,7 @@ class Manipulator:
 
 		
 	def draw(self):
+	
 
 #		draw_grid(1000);
 		glPushMatrix()
@@ -532,6 +583,7 @@ class Manipulator:
 				cur_matrix = np.dot(cur_matrix, i.parent.resMatrix)
 				glLoadMatrixf(np.transpose(cur_matrix))
 				i.draw()
+
 				#draw_grid(1000);
 				glPopMatrix()
 			

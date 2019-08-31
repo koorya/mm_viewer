@@ -177,6 +177,7 @@ def mouse_wheel_funct(button, dir, x, y):
 	elif state == '9':
 		add_config[8] += (1.0+key_f*10)*dir
 		key_t = 0
+
 	elif state == '-':
 		add_pos += np.array([0, 0, 0, (1.0+key_f*10)*dir, 0])
 	elif state == '=':
@@ -251,6 +252,12 @@ def keyboard_funct(key, x, y):
 		else:
 			glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 50.0)	
 		glScale(0.0003, 0.0003, 0.0003)
+	elif key == '[':
+		manip.hanger_joints[0].switch_state()
+		key_t = 0
+	elif key == ']':
+		manip.hanger_joints[1].switch_state()
+		key_t = 0
 	else:
 		state = key
 	print key
