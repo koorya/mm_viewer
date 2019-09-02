@@ -390,7 +390,7 @@ class Manipulator:
 		jack = Jack_Prismatic_Joint(green_color, Theta_f=lambda q: np.radians(90), Alpha=np.radians(90), d_f=lambda q, d=0: q, r=0)
 		kareta = Kareta_Prismatic_Joint(green_color, Theta_f=lambda q: np.radians(0), Alpha=np.radians(-90), d_f=lambda q, d=0: q, r=0)
 		
-		tower = Tower_Revolute_Joint(green_color, Theta_f=lambda q: np.radians(q), Alpha=np.radians(90), d_f=lambda q, d=d_1: d, r=0, uplimit = 110, downlimit = -200)
+		tower = Tower_Revolute_Joint(green_color, Theta_f=lambda q: np.radians(-q), Alpha=np.radians(90), d_f=lambda q, d=d_1: d, r=0, uplimit = 110, downlimit = -200)
 		link_pantograph = Pantograph_Prismatic_Joint(red_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-90), d_f=lambda q, d=(d_2_1+d_2_2): d+q, r=0, uplimit = 2920, downlimit = 0)
 		link_carige = link_carige_Prismatic_Joint(blue_color, Theta_f=lambda q: 0, 				Alpha=np.radians(-0), d_f=lambda q, d=d_3_c: d+q, r=0, uplimit = 1777 , downlimit = 0)#1582
 		wrist = wrist_Revolute_Joint(yellow_color, Theta_f=lambda q: np.radians(-q), 				Alpha=np.radians(90), d_f=lambda q: 0, r=0, uplimit = 100, downlimit = -100)
