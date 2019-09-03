@@ -14,6 +14,12 @@ from World_Components import *
 		
 class Body(Hanger_Component):
 	def __init__(self, pos, dir, angle, par_matrix = np.eye(4)):
+		self.v_list = [[], [], []]
+		self.vertexes = []
+		self.normals = []
+		self.colors = []
+		self.program = None
+		
 		self.pos = np.array([pos[0], pos[1], pos[2], 1.0])
 
 		self.dir = np.array([dir[0], dir[1], dir[2], 0.0])
@@ -80,12 +86,18 @@ class Body(Hanger_Component):
 		child.set_parent_matrix(self.resMatrix)
 		
 	def draw_self(self):
+		return [[], [], []]
 		pass
 		
 		
 	def draw_children(self):
+		vertex_list = [[], [], []]
 		for i in self.children_list:
-			i.draw()
+			ret = i.draw()
+			vertex_list[0] += ret[0]
+			vertex_list[1] += ret[1]
+			vertex_list[2] += ret[2]
+		return vertex_list
 
 	
 	def draw(self):
@@ -93,8 +105,108 @@ class Body(Hanger_Component):
 			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.5, 0.0, 1.0))	
 		else:
 			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
-		self.draw_self()
-		self.draw_children()
+		vertex_list = self.draw_self()
+		ret = self.draw_children()
+		vertex_list[0] += ret[0]
+		vertex_list[1] += ret[1]
+		vertex_list[2] += ret[2]
+		return vertex_list
+	
+	def set_vertex_list(self, v_list):
+		a = np.array(v_list[0]).ravel()
+		# print a
+		# print a.reshape(-1, 4)
+		# exit()
+		b = np.array(v_list[1]).ravel()
+		c = np.array(v_list[2]).ravel()
+		self.vertexes = np.transpose(np.transpose(a.reshape(-1, 4))[:-1]).ravel()
+		self.normals  =	np.transpose(np.transpose(b.reshape(-1, 4))[:-1]).ravel()
+		self.colors = np.transpose(np.transpose(c.reshape(-1, 4))[:-1]).ravel()
+
+
+	
+	def draw_vertex_list(self):
+		
+		if len(self.colors)<1 :
+			return
+
+		if self.program is None:
+			try:
+				vertex2 = create_shader(GL_VERTEX_SHADER, """
+					void main() {
+			
+						vec3 normal, lightDir;
+						vec4 diffuse;
+						float NdotL;
+						
+						/* сначала трансформируем нормаль в нужные координаты и нормализуем результат */
+						normal = normalize(gl_NormalMatrix * gl_Normal);
+						
+						/* Теперь нормализуем направление света. Учтите, что согласно спецификации
+						OpenGL, свет сохраняется в пространстве нашего взгляда. Также, так как мы 
+						говорим о направленном свете, поле "позиция" - это и есть направление. */
+						lightDir = normalize(vec3(gl_LightSource[0].position));
+
+						/* вычислим косинус угла между нормалью и направлением света. Свет у нас
+						направленный, так что направление - константа для каждой вершины. */
+						NdotL = max(dot(normal, lightDir), 0.0);
+						
+						/* вычисляем диффуз */
+						diffuse = gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
+						
+						gl_FrontColor = NdotL * gl_Color;
+						
+						gl_Position = ftransform();
+					}
+				""")
+
+				fragment = create_shader(GL_FRAGMENT_SHADER,"""
+				
+				 void main()
+					{
+						gl_FragColor = gl_Color;
+					}
+					""")
+				# Создаем пустой объект шейдерной программы
+				self.program = glCreateProgram()
+				
+				# Приcоединяем вершинный шейдер к программе
+				glAttachShader(self.program, vertex2)
+				# Присоединяем фрагментный шейдер к программе
+				glAttachShader(self.program, fragment)
+				# "Собираем" шейдерную программу
+				glLinkProgram(self.program)	
+			except Exception as e:
+				print "except"
+				return
+				pass
+		
+
+		glUseProgram(self.program)
+	#	print self.colors[:10]
+	#	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (0.2, 0.1, 0.1, 0.8))
+		glEnableClientState(GL_VERTEX_ARRAY)            # Включаем использование массива вершин
+		glEnableClientState(GL_NORMAL_ARRAY)            # Включаем использование массива вершин
+		glEnableClientState(GL_COLOR_ARRAY)
+
+		# Указываем, где взять массив верши:
+		# Первый параметр - сколько используется координат на одну вершину
+		# Второй параметр - определяем тип данных для каждой координаты вершины
+		# Третий парметр - определяет смещение между вершинами в массиве
+		# Если вершины идут одна за другой, то смещение 0
+		# Четвертый параметр - указатель на первую координату первой вершины в массиве
+		glVertexPointer(3, GL_FLOAT, 0, self.vertexes)
+		glNormalPointer(GL_FLOAT, 0, self.normals)
+		glColorPointer(3, GL_FLOAT, 0, self.colors)
+		# Рисуем данные массивов за один проход:
+		# Первый параметр - какой тип примитивов использовать (треугольники, точки, линии и др.)
+		# Второй параметр - начальный индекс в указанных массивах
+		# Третий параметр - количество рисуемых объектов (в нашем случае это 3 вершины - 9 координат)
+		glDrawArrays(GL_TRIANGLES, 0, len(self.vertexes)/3)
+		glDisableClientState(GL_VERTEX_ARRAY)           # Отключаем использование массива вершин
+		glDisableClientState(GL_NORMAL_ARRAY)           # Отключаем использование массива вершин
+		glDisableClientState(GL_COLOR_ARRAY) 
+		
 		
 	def shape_intersect_finder(self, pos, dir):
 		return intersection.get_intersect_cube(pos, dir)
@@ -149,9 +261,10 @@ class Floor(Body):
 		for x in range(xsize):
 			for y in range(ysize):
 				self.append_child(Column(((xsize/2 - x)*3500-1750, (ysize/2 - y)*3500-1750, 0), (0.0, 0.0, 1.0), 0.0))
-	
+				pass
 		
 	def draw_self(self):
+		return [[], [], []]
 		glPushMatrix()
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
 
@@ -179,11 +292,16 @@ class Floor(Body):
 						intersection = child_int_tmp
 
 		return intersection	
-	
+class Floor1Col(Floor):
+	def child_constr(self):
+		self.append_child(Column((0, -1750, 0), (0.0, 0.0, 1.0), 0.0))
+		pass
+		
 class Field(Floor):
 	def child_constr(self):
 		pass
 	def draw_self(self):
+		return [[], [], []]
 		pass
 	
 class FieldDB(Field):
@@ -192,15 +310,15 @@ class FieldDB(Field):
 		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
 		cursor = conn.cursor()
 		query_str = "SELECT `id` FROM Links"
-		print query_str
+#		print query_str
 		cursor.execute(query_str)
 		conn.close()
 		server_id_list = list(i[0] for i in cursor.fetchall())
-		print server_id_list
+#		print server_id_list
 		add_id_list = list(item for item in set(server_id_list).difference( list( db_link[0] for db_link in self.db_link_list) ) )
-		print add_id_list
+#		print add_id_list
 		rm_id_list = list(item for item in set(list( db_link[0] for db_link in self.db_link_list)).difference( server_id_list ) )
-		print rm_id_list
+#		print rm_id_list
 		
 		for rm_id in rm_id_list:
 			for db_link in self.db_link_list[:]:
@@ -230,6 +348,7 @@ class FieldDB(Field):
 					new_link = Column((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])							
 				self.append_child(new_link)
 				self.db_link_list.append([add_id_link[0], new_link])
+			self.set_vertex_list(self.draw())
 		pass
 	
 class FilledFloor(Floor):
@@ -301,6 +420,9 @@ class Link(BodyCil):
 		
 		pass
 	def draw_self(self):
+		#return [[], [], []]
+		
+		return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
 		glPushMatrix()
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
 #		glRotatef(45, 0, 0, 1)
@@ -311,6 +433,7 @@ class Link(BodyCil):
 		glPushMatrix()
 		glTranslatef(0.0, 0.0, -0.5)
 		glutSolidCylinder(0.5, 1, 10, 10)
+		
 		glPopMatrix()
 		
 #		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, (0.0, 0.0, 0.0, 1.0))
@@ -350,6 +473,8 @@ class Column_Stock(BodyCil):
 		
 		pass
 	def draw_self(self):
+		#return [[], [], []]
+		return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
 		glPushMatrix()
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
 #		glRotatef(45, 0, 0, 1)
@@ -401,6 +526,8 @@ class Column(Body):
 		pass
 
 	def draw_self(self):
+		#return [[], [], []]
+		return getCubeVertexArray(self.fw_shape_matrix, (0.15, 0.15, 0.15, 0.9))
 		glPushMatrix()
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
 #		glRotatef(45, 0, 0, 1)
@@ -453,30 +580,6 @@ class LinkMiddleBond(Body):
 
 
 
-def draw_grid(size):
-	global red_color, green_color, blue_color
-
-	glBegin(GL_LINES)
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , red_color)		
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, red_color)
-	glVertex3f(0.0, 0.0, 0.0)
-	glVertex3f(size, 0.0, 0.0)
-	glEnd()
-	glBegin(GL_LINES)
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , green_color)	
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, green_color)	
-	glVertex3f(0.0, 0.0, 0.0)
-	glVertex3f(0.0, size, 0.0)
-	glEnd()
-	glBegin(GL_LINES)
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , blue_color)	
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, blue_color)	
-	glVertex3f(0.0, 0.0, 0.0)
-	glVertex3f(0.0, 0.0, size)
-	glEnd()
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , black_color)	
-
-
 	
 class Petal(Body):
 	def set_shape(self):
@@ -486,6 +589,8 @@ class Petal(Body):
 											[  0.,   0.,   0.,  1.]])
 		pass
 	def draw_self(self):
+	#	return [[], [], []]
+		return getCubeVertexArray(self.fw_shape_matrix, (0.3, 0.1, 0.1, 0.9))
 		glPushMatrix()
 
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	

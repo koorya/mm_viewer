@@ -322,6 +322,8 @@ class Hanger_Joint(Joint):
 	def pick_up(self):
 		self.is_active = 1
 	def drop(self):
+		self.is_active = 0
+	def mount(self):
 		if self.is_active == 0:
 			return
 		self.is_active = 0
@@ -342,7 +344,7 @@ class Hanger_Joint(Joint):
 		
 	def switch_state(self):
 		if self.is_active == 1:
-			self.drop()
+			self.mount()
 		else:
 			self.pick_up()
 			
@@ -442,8 +444,8 @@ class Manipulator:
 											[link_carige, 
 												[wrist, 
 													[link_rotation,
-														[sens1],
-														[sens2],
+														#[sens1],
+														#[sens2],
 														[link_hanger],
 														[stik_midle],
 														[stik_left],
