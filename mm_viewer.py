@@ -21,10 +21,10 @@ import time
 
 np.set_printoptions(precision = 3)
 
-mode = 'sql'
+mode = 'sql_'
 
 #conn = MySQLdb.connect('localhost', 'user2', 'vbtqjpxe', 'my_new_schema')
-conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 
 
 
@@ -45,9 +45,9 @@ def calback():
 
 
 
-
 floor1 = Floor((0.0, 0.0, -636.5), (0.0, 0.0, 1.0), 0.0)
 floor2 = FilledFloor((0.0, 0.0, -636.5 - 3000.0), (0.0, 0.0, 1.0), 0.0)
+#floor2 = Floor((0.0, 0.0, -636.5 - 3000.0), (0.0, 0.0, 1.0), 0.0)
 field = FieldDB((0.0, 0.0, 0.0), (0.0, 0.0, 1.0), 0.0)
 field.append_child(floor1)
 field.append_child(floor2)
@@ -71,7 +71,7 @@ manip.setActiveField(field)
 
 state = 'q'
 
-conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 time_stamp = time.time()
 call_cnt = 0
 
@@ -82,39 +82,33 @@ def timercallback(value):
 
 	if mode== 'sql':	
 #		conn = MySQLdb.connect('localhost', 'user1', 'vbtqjpxe', 'my_new_schema')
-		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 		cursor = conn.cursor()
 		
 		col_name_list = manip.driven_joints_name
 		col_name_str = "`{0}`".format(col_name_list[0])
 		for i in col_name_list[1:]:
 			col_name_str += ", `{0}`".format(i)
-		query_str = "SELECT {0} FROM configuration_new WHERE (id = {1})".format(col_name_str, id)
+		query_str = "SELECT {0}, `stick_in_hand` FROM {2} WHERE (id = {1})".format(col_name_str, id, CONFIGURATION_TABLE)
 #		print query_str
 		cursor.execute(query_str)
 		# Получаем данные.
 		row = cursor.fetchone()
-		manip.setConfig(row)
-#		manip.set_pos(row[5])
-#		print "q1: ",row[0], "q2: ",row[1], "q3: ",row[2], "q4: ",row[3], "q5: ",row[4]
-		conn.close()
-#		print manip.getTarget();
-
-	manip.calc_kinematics()
-	'''
-	if mode== 'sql':
-#		conn = MySQLdb.connect('localhost', 'user1', 'vbtqjpxe', 'my_new_schema')
-		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')		
-		cursor = conn.cursor()
-		cursor.execute(manip.get_sql_sensor_query())
-		conn.commit()
-#		conn.close()
-	'''
-	
-	call_cnt += 1
-	if (call_cnt % 10 == 0):
-		field.updateByDB()
+		manip.setConfig(row[:len(row)-1])
 		
+		
+		conn.close()
+		
+	
+		if row[len(row)-1]:
+			manip.hanger_joints[0].pick_up()
+		else:
+			manip.hanger_joints[0].mount()
+#		print row
+	manip.calc_kinematics()
+	field.updateByDB()
+
+	call_cnt += 1
 	if (call_cnt % 500 == 0):
 		print "time: ", (time.time()-time_stamp)/500.
 		time_stamp = time.time()
@@ -138,7 +132,7 @@ def mouse_wheel_funct(button, dir, x, y):
 	global eye_dir, eye_pos
 	global sens_alpha, sens_beta
 
-	print "button: ", button
+	# print "button: ", button
 
 	_phi = np.deg2rad(90 - manip.joints[0].q - manip.joints[3].q)
 	_theta = np.deg2rad(manip.joints[4].q)
@@ -206,9 +200,9 @@ def mouse_wheel_funct(button, dir, x, y):
 							0, 0])
 
 		
-	print "scale: %.5f"%scale
-	print "key_t: %i"%key_t
-	print "theta: %i"%target_theta,"phi: %i"%target_phi 
+	# print "scale: %.5f"%scale
+	# print "key_t: %i"%key_t
+	# print "theta: %i"%target_theta,"phi: %i"%target_phi 
 
 	if key_t == 1:
 		res_pos = manip.getTarget() + add_pos
@@ -216,8 +210,8 @@ def mouse_wheel_funct(button, dir, x, y):
 		conf = manip.getConfigByTarget(res_pos)
 		
 		manip.setConfig(conf)
-		print "position: ",res_pos
-		print "config:", conf
+		# print "position: ",res_pos
+		# print "config:", conf
 
 	else:
 		manip.setConfig(add_config)
@@ -230,7 +224,7 @@ def keyboard_funct(key, x, y):
 	global key_f
 	global key_t
 	global target_x, target_y, target_z, target_theta, target_phi, manip
-	global aspect, prj_mode
+	global aspect, prj_mode, program1, program2
 	if key == 'f':
 		key_f = 1
 	elif key == 'g':
@@ -239,6 +233,12 @@ def keyboard_funct(key, x, y):
 		target_x, target_y, target_z, target_theta, target_phi = manip.getTarget()
 		key_t = 1
 	elif key == 'r':
+		key_t = 0
+	elif key == ',':
+		glUseProgram(program2)
+		key_t = 0
+	elif key == '.':
+		glUseProgram(program1)
 		key_t = 0
 	elif key == 'k':
 		if prj_mode == "perspective":
@@ -300,8 +300,8 @@ def active_mouse_motion(x, y):
 	elif middle_button_state:
 		eye_pos -= (y-last_y)*50*eye_dir
 
-	print "alpha: ", alpha, "  beta: ", beta
-	print "x: ", x, "  y: ", y
+	# print "alpha: ", alpha, "  beta: ", beta
+	# print "x: ", x, "  y: ", y
 	last_x, last_y = x, y
 	eye_dir = np.array([np.cos(alpha)*np.cos(beta), np.sin(alpha)*np.cos(beta), np.sin(beta)])
 #	glutPostRedisplay()
@@ -318,8 +318,8 @@ def mouse_funct(button, state, x, y):
 		right_button_state = not state
 	if button == 1:
 		middle_button_state = not state
-	print "left: ", left_button_state
-	print "right: ", right_button_state		
+	# print "left: ", left_button_state
+	# print "right: ", right_button_state		
 	last_x, last_y = x, y
 
 # Процедура инициализации
@@ -330,6 +330,11 @@ def init():
 
 	global treecolor	# Цвет елочного ствола
 	global lightpos	 # Положение источника освещения
+	global program1, program2
+
+
+
+
 
 	xrot = 0.0						  # Величина вращения по оси x = 0
 	yrot = 0.0						  # Величина вращения по оси y = 0
@@ -350,6 +355,48 @@ def init():
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
 	glLightfv(GL_LIGHT0, GL_SPECULAR, (1.0, 0.0, 0.0, 1.0))
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 0.0))
+
+
+	vertex2 = create_shader(GL_VERTEX_SHADER, """
+	varying vec4 vertex_color;
+				void main(){
+					gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+					//vertex_color = gl_Color;
+				}""")
+
+	vertex = create_shader(GL_VERTEX_SHADER, """
+	varying vec4 vertex_color;
+				void main(){
+					gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+					vertex_color = gl_Color;
+				}""")
+	# Создаем фрагментный шейдер:
+	# Определяет цвет каждого фрагмента как "смешанный" цвет его вершин
+	fragment = create_shader(GL_FRAGMENT_SHADER, """
+	varying vec4 vertex_color;
+				void main() {
+					gl_FragColor = vertex_color;
+	}""")
+	# Создаем пустой объект шейдерной программы
+	program1 = glCreateProgram()
+	program2 = glCreateProgram()
+	
+	# Приcоединяем вершинный шейдер к программе
+	glAttachShader(program2, vertex2)
+	# Присоединяем фрагментный шейдер к программе
+	glAttachShader(program2, fragment)
+	# "Собираем" шейдерную программу
+	glLinkProgram(program2)	
+	
+	# Приcоединяем вершинный шейдер к программе
+	glAttachShader(program1, vertex)
+	# Присоединяем фрагментный шейдер к программе
+	glAttachShader(program1, fragment)
+	# "Собираем" шейдерную программу
+	glLinkProgram(program1)
+
+	glUseProgram(program2)		
+
 
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
@@ -419,7 +466,7 @@ def draw():
 	draw_grid(1000);
 	
 	manip.draw()
-	field.draw()
+	field.draw_vertex_list()
 
 #	some_model.draw()
 

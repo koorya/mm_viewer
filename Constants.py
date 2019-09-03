@@ -6,4 +6,12 @@ d_2_1 = 639
 d_2_2 = 0
 d_5 = 641
 
-id = 1
+DATABASE_NAME 				= "MM"
+LINK_AND_COLUMN_TABLE_NAME 	= "Links_test"
+CONFIGURATION_TABLE 		= "configuration_new"
+
+
+id = 2
+
+
+
