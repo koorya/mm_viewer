@@ -7,7 +7,7 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import * 
 from opengl_drawing_tools import *
 from World_Components import *
-
+import sys
 
 
 ###################################################################################		
@@ -101,6 +101,7 @@ class Body(Hanger_Component):
 
 	
 	def draw(self):
+		print "MAIN DRAW"
 		if self.intersect_counter > 0:
 			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.5, 0.0, 1.0))	
 		else:
@@ -113,10 +114,23 @@ class Body(Hanger_Component):
 		return vertex_list
 	
 	def set_vertex_list(self, v_list):
+		
+		
+#		orig_stdout = sys.stdout
+#		f = open('log.txt', 'w')
+#		sys.stdout = f
+
 		a = np.array(v_list[0]).ravel()
-		# print a
-		# print a.reshape(-1, 4)
-		# exit()
+		print "start a"
+		print a
+		print "end a"
+		print "start v_list[0]"
+		print np.array(v_list[0])
+		print "endv_list[0]"
+#		sys.stdout = orig_stdout
+#		f.close()
+		print a.reshape(-1, 4)
+#		exit()
 		b = np.array(v_list[1]).ravel()
 		c = np.array(v_list[2]).ravel()
 		self.vertexes = np.transpose(np.transpose(a.reshape(-1, 4))[:-1]).ravel()
@@ -308,8 +322,9 @@ class FieldDB(Field):
 	db_link_list = []
 	def updateByDB(self):
 		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+		table_name = "Links_test"
 		cursor = conn.cursor()
-		query_str = "SELECT `id` FROM Links"
+		query_str = "SELECT `id` FROM "+table_name
 #		print query_str
 		cursor.execute(query_str)
 		conn.close()
@@ -334,7 +349,7 @@ class FieldDB(Field):
 
 			conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
 			cursor = conn.cursor()
-			query_str = "SELECT `id`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`, `type` FROM Links WHERE id IN ({0})".format(id_str)
+			query_str = "SELECT `id`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`, `type` FROM {1} WHERE id IN ({0})".format(id_str, table_name)
 			print query_str
 			cursor.execute(query_str)
 			conn.close()
@@ -422,7 +437,8 @@ class Link(BodyCil):
 	def draw_self(self):
 		#return [[], [], []]
 		
-		return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
+		return getCylinVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
+		#return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
 		glPushMatrix()
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
 #		glRotatef(45, 0, 0, 1)
