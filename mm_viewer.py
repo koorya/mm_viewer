@@ -24,7 +24,7 @@ np.set_printoptions(precision = 3)
 mode = 'sql_'
 
 #conn = MySQLdb.connect('localhost', 'user2', 'vbtqjpxe', 'my_new_schema')
-conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 
 
 
@@ -71,7 +71,7 @@ manip.setActiveField(field)
 
 state = 'q'
 
-conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 time_stamp = time.time()
 call_cnt = 0
 
@@ -82,14 +82,16 @@ def timercallback(value):
 
 	if mode== 'sql':	
 #		conn = MySQLdb.connect('localhost', 'user1', 'vbtqjpxe', 'my_new_schema')
-		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 		cursor = conn.cursor()
 		
 		col_name_list = manip.driven_joints_name
 		col_name_str = "`{0}`".format(col_name_list[0])
 		for i in col_name_list[1:]:
 			col_name_str += ", `{0}`".format(i)
-		query_str = "SELECT {0}, `stick_in_hand` FROM configuration_new WHERE (id = {1})".format(col_name_str, id)
+
+		query_str = "SELECT {0}, `stick_in_hand` FROM {2} WHERE (id = {1})".format(col_name_str, id, CONFIGURATION_TABLE)
+
 #		print query_str
 		cursor.execute(query_str)
 		# Получаем данные.
@@ -100,15 +102,6 @@ def timercallback(value):
 		conn.close()
 		
 	
-		'''
-		if mode== 'sql':
-	#		conn = MySQLdb.connect('localhost', 'user1', 'vbtqjpxe', 'my_new_schema')
-			conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')		
-			cursor = conn.cursor()
-			cursor.execute(manip.get_sql_sensor_query())
-			conn.commit()
-	#		conn.close()
-		'''
 		if row[len(row)-1]:
 			manip.hanger_joints[0].pick_up()
 		else:

@@ -324,9 +324,11 @@ class Hanger_Joint(Joint):
 	def drop(self):
 		self.is_active = 0
 	def mount(self):
+
 		if self.is_active == 0:
 			return
 		self.is_active = 0
+		self.hanged_obj.set_parent(self)
 		matrix = self.hanged_obj.resMatrix
 		print matrix
 		pos = np.transpose(matrix)[3:][0][:3]
@@ -335,9 +337,9 @@ class Hanger_Joint(Joint):
 		print dir
 		angle = -np.rad2deg(np.arctan2(matrix[0][0], matrix[1][0]))
 		print angle
-		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')		
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)		
 		cursor = conn.cursor()
-		query_str = "INSERT INTO Links (`type`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`) VALUES ('{7}', {0}, {1}, {2}, {3}, {4}, {5}, {6})".format(pos[0], pos[1], pos[2], dir[0], dir[1], dir[2], angle, self.type)
+		query_str = "INSERT INTO {8} (`type`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`) VALUES ('{7}', {0}, {1}, {2}, {3}, {4}, {5}, {6})".format(pos[0], pos[1], pos[2], dir[0], dir[1], dir[2], angle, self.type, LINK_AND_COLUMN_TABLE_NAME)
 		cursor.execute(query_str)
 		conn.commit()
 		conn.close()
@@ -350,11 +352,14 @@ class Hanger_Joint(Joint):
 			
 	def draw(self):
 		if self.is_active == 1:
-			self.hanged_obj.draw()
+			self.hanged_obj.set_parent_matrix(np.eye(4))
+			self.hanged_obj.set_vertex_list(self.hanged_obj.draw())
+			self.hanged_obj.draw_vertex_list()
 		
 	def set_parent_matrix(self, par_matrix):
 		self.resMatrix = par_matrix
 		self.hanged_obj.set_parent(self)		
+		
 		
 	
 	

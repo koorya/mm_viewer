@@ -7,9 +7,8 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import * 
 from opengl_drawing_tools import *
 from World_Components import *
-
-
-
+from Constants import *
+		
 ###################################################################################		
 		
 class Body(Hanger_Component):
@@ -307,9 +306,11 @@ class Field(Floor):
 class FieldDB(Field):
 	db_link_list = []
 	def updateByDB(self):
-		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 		cursor = conn.cursor()
-		query_str = "SELECT `id` FROM Links"
+
+		query_str = "SELECT `id` FROM {0}".format(LINK_AND_COLUMN_TABLE_NAME)
+
 #		print query_str
 		cursor.execute(query_str)
 		conn.close()
@@ -332,9 +333,9 @@ class FieldDB(Field):
 			for i in add_id_list[1:]:
 				id_str += ", {0}".format(i)
 
-			conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')
+			conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 			cursor = conn.cursor()
-			query_str = "SELECT `id`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`, `type` FROM Links WHERE id IN ({0})".format(id_str)
+			query_str = "SELECT `id`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`, `type` FROM {1} WHERE id IN ({0})".format(id_str, LINK_AND_COLUMN_TABLE_NAME)
 			print query_str
 			cursor.execute(query_str)
 			conn.close()
