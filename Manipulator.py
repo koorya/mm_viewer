@@ -328,6 +328,7 @@ class Hanger_Joint(Joint):
 		if self.is_active == 0:
 			return
 		self.is_active = 0
+		self.hanged_obj.set_parent(self)
 		matrix = self.hanged_obj.resMatrix
 		print matrix
 		pos = np.transpose(matrix)[3:][0][:3]
@@ -351,7 +352,7 @@ class Hanger_Joint(Joint):
 			
 	def draw(self):
 		if self.is_active == 1:
-			self.hanged_obj.set_parent(self)
+			self.hanged_obj.set_parent_matrix(np.eye(4))
 			self.hanged_obj.set_vertex_list(self.hanged_obj.draw())
 			self.hanged_obj.draw_vertex_list()
 		
