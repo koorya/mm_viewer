@@ -8,8 +8,8 @@ d_5 = 641
 
 
 DATABASE_NAME 				= "MM"
-LINK_AND_COLUMN_TABLE_NAME 	= "Links_test"
+LINK_AND_COLUMN_TABLE_NAME 	= "Links" #Links_test, Links
 CONFIGURATION_TABLE 		= "configuration_new"
 
 
-id = 2
+id = 1 #1 - kostya, 2- kirya
