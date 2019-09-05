@@ -6,12 +6,12 @@ d_2_1 = 639
 d_2_2 = 0
 d_5 = 641
 
-DATABASE_NAME 				= "MM"
-LINK_AND_COLUMN_TABLE_NAME 	= "Links_test"
+DATABASE_NAME 				= "MM_kirya"
+LINK_AND_COLUMN_TABLE_NAME 	= "Links"
 CONFIGURATION_TABLE 		= "configuration_new"
 
 
-id = 2
+id = 1
 
 
 

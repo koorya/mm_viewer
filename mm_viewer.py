@@ -21,7 +21,7 @@ import time
 
 np.set_printoptions(precision = 3)
 
-mode = 'sql_'
+mode = 'sql'
 
 #conn = MySQLdb.connect('localhost', 'user2', 'vbtqjpxe', 'my_new_schema')
 conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
