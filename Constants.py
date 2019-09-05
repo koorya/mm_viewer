@@ -6,7 +6,7 @@ d_2_1 = 639
 d_2_2 = 0
 d_5 = 641
 
-DATABASE_NAME 				= "MM_kirya"
+DATABASE_NAME 				= "MM_dev"
 LINK_AND_COLUMN_TABLE_NAME 	= "Links"
 CONFIGURATION_TABLE 		= "configuration_new"
 
