@@ -229,7 +229,7 @@ class link_rotation_Revolute_Joint(Revolute_Joint):
 		if self.model is None:	
 			self.model = []
 			self.model.append(Loaded_Model("models/Component26.stl", "#1E027D"))
-
+			
 		glPushMatrix()
 		glRotatef(180, 0, 0, 1)
 #		draw_grid(1000)
@@ -351,15 +351,17 @@ class Hanger_Joint(Joint):
 			self.pick_up()
 			
 	def draw(self):
+		self.draw_self()
 		if self.is_active == 1:
 			self.hanged_obj.set_parent_matrix(np.eye(4))
 			self.hanged_obj.set_vertex_list(self.hanged_obj.draw())
 			self.hanged_obj.draw_vertex_list()
-		
+	def draw_self(self):
+		pass
 	def set_parent_matrix(self, par_matrix):
 		self.resMatrix = par_matrix
 		self.hanged_obj.set_parent(self)		
-		
+	
 		
 	
 	
@@ -370,6 +372,14 @@ class column_hanger_Joint(Hanger_Joint):
 class link_hanger_Joint(Hanger_Joint):
 	hanged_obj = Link((0., 0., 0.), (0.0, 0.0, 1.0), 180.0)
 	type = "diagonal"
+	def draw_self(self):
+		if self.model is None:	
+			self.model = []
+ 			self.model.append(Loaded_Model("models/Component5_3.stl", "#155713"))
+			self.model.append(Loaded_Model("models/Component5_1.stl", "#2D728C"))
+			self.model.append(Loaded_Model("models/Component5_2.stl", "#2D728C"))
+		for model in self.model:
+			model.draw()
 
 		
 		
@@ -427,22 +437,8 @@ class Manipulator:
 		link_hanger = link_hanger_Joint(yellow_color, Theta_f=lambda q: np.radians(0), Alpha=np.radians(0), d_f=lambda q: 0, r=0)
 		
 
-#		some_model = Loaded_Model()
-#		some_model.load_model("models/Component5.stl")
 
-		stik_midle = Loaded_Model("models/Component5_3.stl", "#155713")
-
-
-		stik_left = Loaded_Model("models/Component5_1.stl", "#2D728C")
-
-		
-		stik_right = Loaded_Model("models/Component5_2.stl", "#2D728C")
-
-		  
-
-
-		self.joints_tree = 	[
-							jack,
+		self.joints_tree = 	[jack,
 								[kareta,
 									[tower,
 										[link_pantograph, 
@@ -452,10 +448,6 @@ class Manipulator:
 														#[sens1],
 														#[sens2],
 														[link_hanger],
-														[stik_midle],
-														[stik_left],
-														[stik_right],
-														
 													]
 												]
 											]
@@ -463,7 +455,7 @@ class Manipulator:
 										
 										[column_pantograph, 
 											[column_carrige, 
-												[column_handle]#, [Column((0, 2550, 450/1.4), (0.0, -1.0, 0.0), 0.0)]]
+												[column_handle]
 											]
 										]
 									]
