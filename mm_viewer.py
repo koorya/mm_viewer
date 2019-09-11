@@ -294,11 +294,16 @@ def active_mouse_motion(x, y):
 			alpha += pwr*(x-last_x)
 		if y!=last_y:
 			beta += pwr*(y-last_y)
+			pi_2 = np.pi/2
+			if beta >= pi_2:
+				beta = pi_2*0.999
+			if beta <= -pi_2:
+				beta = -pi_2*0.999
 	elif left_button_state:
-		if x!=last_x:
-			eye_pos -= 10*(x-last_x)*np.cross(eye_dir, np.array([0, 0, 1]))
-		if y!=last_y:
-			eye_pos += 10*(y-last_y)*np.array([0, 0, 1])#np.cross(eye_dir, np.array([1, 0, 1]))
+		vec = np.cross(eye_dir, np.array([0, 0, 1]))
+		vec /= np.linalg.norm(vec)
+		eye_pos -= 10*(x-last_x)*vec
+		eye_pos += 10*(y-last_y)*np.cross(vec, eye_dir)
 	elif middle_button_state:
 		eye_pos -= (y-last_y)*50*eye_dir
 
