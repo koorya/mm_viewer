@@ -347,8 +347,9 @@ class FieldDB(Field):
 					new_link = Column((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])							
 				self.append_child(new_link)
 				self.db_link_list.append([add_id_link[0], new_link])
+		if len(add_id_list)>0 or len(rm_id_list)>0:
 			self.set_vertex_list(self.draw())
-		pass
+
 	
 class FilledFloor(Floor):
 	def child_constr(self):
