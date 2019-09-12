@@ -229,7 +229,7 @@ class link_rotation_Revolute_Joint(Revolute_Joint):
 		if self.model is None:	
 			self.model = []
 			self.model.append(Loaded_Model("models/Component26.stl", "#1E027D"))
-
+			
 		glPushMatrix()
 		glRotatef(180, 0, 0, 1)
 #		draw_grid(1000)
@@ -324,9 +324,11 @@ class Hanger_Joint(Joint):
 	def drop(self):
 		self.is_active = 0
 	def mount(self):
+
 		if self.is_active == 0:
 			return
 		self.is_active = 0
+		self.hanged_obj.set_parent(self)
 		matrix = self.hanged_obj.resMatrix
 		print matrix
 		pos = np.transpose(matrix)[3:][0][:3]
@@ -335,9 +337,9 @@ class Hanger_Joint(Joint):
 		print dir
 		angle = -np.rad2deg(np.arctan2(matrix[0][0], matrix[1][0]))
 		print angle
-		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', 'MM')		
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)		
 		cursor = conn.cursor()
-		query_str = "INSERT INTO Links (`type`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`) VALUES ('{7}', {0}, {1}, {2}, {3}, {4}, {5}, {6})".format(pos[0], pos[1], pos[2], dir[0], dir[1], dir[2], angle, self.type)
+		query_str = "INSERT INTO {8} (`type`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`) VALUES ('{7}', {0}, {1}, {2}, {3}, {4}, {5}, {6})".format(pos[0], pos[1], pos[2], dir[0], dir[1], dir[2], angle, self.type, LINK_AND_COLUMN_TABLE_NAME)
 		cursor.execute(query_str)
 		conn.commit()
 		conn.close()
@@ -349,12 +351,17 @@ class Hanger_Joint(Joint):
 			self.pick_up()
 			
 	def draw(self):
+		self.draw_self()
 		if self.is_active == 1:
-			self.hanged_obj.draw()
-		
+			self.hanged_obj.set_parent_matrix(np.eye(4))
+			self.hanged_obj.set_vertex_list(self.hanged_obj.draw())
+			self.hanged_obj.draw_vertex_list()
+	def draw_self(self):
+		pass
 	def set_parent_matrix(self, par_matrix):
 		self.resMatrix = par_matrix
 		self.hanged_obj.set_parent(self)		
+	
 		
 	
 	
@@ -365,13 +372,22 @@ class column_hanger_Joint(Hanger_Joint):
 class link_hanger_Joint(Hanger_Joint):
 	hanged_obj = Link((0., 0., 0.), (0.0, 0.0, 1.0), 180.0)
 	type = "diagonal"
+	def draw_self(self):
+		if self.model is None:	
+			self.model = []
+ 			self.model.append(Loaded_Model("models/Component5_3.stl", "#155713"))
+			self.model.append(Loaded_Model("models/Component5_1.stl", "#2D728C"))
+			self.model.append(Loaded_Model("models/Component5_2.stl", "#2D728C"))
+		for model in self.model:
+			model.draw()
 
 		
 		
 class Manipulator:
 
 	sens_list = []
-
+	update_config_by_db_thread = None
+	drawing_process = False
 	def __init__(self):
 		global d_1, d_3_c, d_2_1, d_2_2, d_5, H
 		
@@ -422,22 +438,8 @@ class Manipulator:
 		link_hanger = link_hanger_Joint(yellow_color, Theta_f=lambda q: np.radians(0), Alpha=np.radians(0), d_f=lambda q: 0, r=0)
 		
 
-#		some_model = Loaded_Model()
-#		some_model.load_model("models/Component5.stl")
 
-		stik_midle = Loaded_Model("models/Component5_3.stl", "#155713")
-
-
-		stik_left = Loaded_Model("models/Component5_1.stl", "#2D728C")
-
-		
-		stik_right = Loaded_Model("models/Component5_2.stl", "#2D728C")
-
-		  
-
-
-		self.joints_tree = 	[
-							jack,
+		self.joints_tree = 	[jack,
 								[kareta,
 									[tower,
 										[link_pantograph, 
@@ -447,10 +449,6 @@ class Manipulator:
 														#[sens1],
 														#[sens2],
 														[link_hanger],
-														[stik_midle],
-														[stik_left],
-														[stik_right],
-														
 													]
 												]
 											]
@@ -458,7 +456,7 @@ class Manipulator:
 										
 										[column_pantograph, 
 											[column_carrige, 
-												[column_handle]#, [Column((0, 2550, 450/1.4), (0.0, -1.0, 0.0), 0.0)]]
+												[column_handle]
 											]
 										]
 									]
@@ -568,7 +566,7 @@ class Manipulator:
 
 		
 	def draw(self):
-	
+		self.drawing_process = True
 
 #		draw_grid(1000);
 		glPushMatrix()
@@ -593,21 +591,55 @@ class Manipulator:
 		#draw_grid(1000);
 
 		self.draw_end()
-		
 		glPopMatrix()
-		
+
+		self.drawing_process = False		
 		
 	def set_pos(self, x_pos):
 		self.position[0] = x_pos
 		
 
 	def setConfig(self, config):
-			
+		while self.drawing_process == True:
+			pass
 		for idx, val in enumerate(self.driven_joints):
 			if len(config)>idx:
 				val.q = config[idx]
 				val.calcHMatrix()
+	
+	def startUpdateConfigByDBTread(self):
+		self.update_config_by_db_thread = threading.Thread(target = self.updateConfigByDBTreadFunct,)
+		self.update_config_by_db_thread.deamon = True
+		self.update_config_by_db_thread.start()		
+	
+	def updateConfigByDBTreadFunct(self):
+		while True:
+			self.updateConfigByDB()
+		#	time.sleep(0.02)
+	
+	def updateConfigByDB(self):
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
+		cursor = conn.cursor()
+		
+		col_name_list = self.driven_joints_name
+		col_name_str = "`{0}`".format(col_name_list[0])
+		for i in col_name_list[1:]:
+			col_name_str += ", `{0}`".format(i)
+		query_str = "SELECT {0}, `stick_in_hand` FROM {2} WHERE (id = {1})".format(col_name_str, id, CONFIGURATION_TABLE)
+#		print query_str
+		cursor.execute(query_str)
+		# Получаем данные.
+		row = cursor.fetchone()
+		self.setConfig(row[:len(row)-1])
 
+		conn.close()
+		
+		if row[len(row)-1]:
+			self.hanger_joints[0].pick_up()
+		else:
+			self.hanger_joints[0].mount()
+
+		self.calc_kinematics()
 			
 	def getConfig(self):
 
