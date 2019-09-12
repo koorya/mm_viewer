@@ -7,9 +7,8 @@ d_2_2 = 0
 d_5 = 641
 
 
-DATABASE_NAME 				= "MM"
+DATABASE_NAME 				= "MM_dev"
 LINK_AND_COLUMN_TABLE_NAME 	= "Links" #Links_test, Links
 CONFIGURATION_TABLE 		= "configuration_new"
 
-
-id = 1 #1 - kostya, 2- kirya
+id = 1
