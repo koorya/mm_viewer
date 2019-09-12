@@ -8,11 +8,16 @@ from OpenGL.GLUT import *
 from opengl_drawing_tools import *
 from World_Components import *
 from Constants import *
-		
+
+import time
+import threading
+
+
 ###################################################################################		
 		
 class Body(Hanger_Component):
 	def __init__(self, pos, dir, angle, par_matrix = np.eye(4)):
+		self.drawing_vertex_list_semaphore = False
 		self.v_list = [[], [], []]
 		self.vertexes = []
 		self.normals = []
@@ -100,10 +105,10 @@ class Body(Hanger_Component):
 
 	
 	def draw(self):
-		if self.intersect_counter > 0:
-			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.5, 0.0, 1.0))	
-		else:
-			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
+#		if self.intersect_counter > 0:
+#			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.5, 0.0, 1.0))	
+#		else:
+#			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
 		vertex_list = self.draw_self()
 		ret = self.draw_children()
 		vertex_list[0] += ret[0]
@@ -118,17 +123,21 @@ class Body(Hanger_Component):
 		# exit()
 		b = np.array(v_list[1]).ravel()
 		c = np.array(v_list[2]).ravel()
-		self.vertexes = np.transpose(np.transpose(a.reshape(-1, 4))[:-1]).ravel()
-		self.normals  =	np.transpose(np.transpose(b.reshape(-1, 4))[:-1]).ravel()
-		self.colors = np.transpose(np.transpose(c.reshape(-1, 4))[:-1]).ravel()
+		vertexes = np.transpose(np.transpose(a.reshape(-1, 4))[:-1]).ravel()
+		normals  =	np.transpose(np.transpose(b.reshape(-1, 4))[:-1]).ravel()
+		colors = np.transpose(np.transpose(c.reshape(-1, 4))[:-1]).ravel()
+		while self.drawing_vertex_list_semaphore == True:
+			pass
+		self.vertexes, self.normals, self.colors = vertexes, normals, colors
+
 
 
 	
 	def draw_vertex_list(self):
-		
+
 		if len(self.colors)<1 :
 			return
-
+		self.drawing_vertex_list_semaphore = True	
 		if self.program is None:
 			try:
 				vertex2 = create_shader(GL_VERTEX_SHADER, """
@@ -206,6 +215,7 @@ class Body(Hanger_Component):
 		glDisableClientState(GL_NORMAL_ARRAY)           # Отключаем использование массива вершин
 		glDisableClientState(GL_COLOR_ARRAY) 
 		
+		self.drawing_vertex_list_semaphore = False
 		
 	def shape_intersect_finder(self, pos, dir):
 		return intersection.get_intersect_cube(pos, dir)
@@ -305,6 +315,25 @@ class Field(Floor):
 	
 class FieldDB(Field):
 	db_link_list = []
+	update_thread_working = False
+	update_thread = None
+	def startUpdateThread(self):
+		if self.update_thread_working:
+			return
+		self.update_thread_working = True
+		self.update_thread = threading.Thread(target = self.updateThreadFunct,)
+		self.update_thread.deamon = True
+		self.update_thread.start()
+		
+	def stopUpdateThread(self):
+		self.update_thread_working = False
+		
+	def updateThreadFunct(self):
+		print "updateThreadFunct calls"
+		while self.update_thread_working:
+			time.sleep(0.5)
+			self.updateByDB()
+		
 	def updateByDB(self):
 		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 		cursor = conn.cursor()
@@ -347,8 +376,10 @@ class FieldDB(Field):
 					new_link = Column((add_id_link[1], add_id_link[2], add_id_link[3]), (add_id_link[4], add_id_link[5], add_id_link[6]), add_id_link[7])							
 				self.append_child(new_link)
 				self.db_link_list.append([add_id_link[0], new_link])
+
 		if len(add_id_list)>0 or len(rm_id_list)>0:
-			self.set_vertex_list(self.draw())
+			pre_vert_list = self.draw()
+			self.set_vertex_list(pre_vert_list)
 
 	
 class FilledFloor(Floor):

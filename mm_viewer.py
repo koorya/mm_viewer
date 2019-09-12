@@ -15,7 +15,7 @@ from opengl_drawing_tools import *
 from stl_loader import *
 
 import time 
-
+import threading
 
 
 
@@ -106,7 +106,6 @@ def timercallback(value):
 			manip.hanger_joints[0].mount()
 #		print row
 	manip.calc_kinematics()
-	field.updateByDB()
 
 	call_cnt += 1
 	if (call_cnt % 500 == 0):
@@ -500,6 +499,7 @@ glutMouseFunc(mouse_funct)
 glutTimerFunc(100, timercallback, 1)
 init()
 
+field.startUpdateThread()
 
 
 
