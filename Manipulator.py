@@ -386,7 +386,8 @@ class link_hanger_Joint(Hanger_Joint):
 class Manipulator:
 
 	sens_list = []
-
+	update_config_by_db_thread = None
+	drawing_process = False
 	def __init__(self):
 		global d_1, d_3_c, d_2_1, d_2_2, d_5, H
 		
@@ -565,7 +566,7 @@ class Manipulator:
 
 		
 	def draw(self):
-	
+		self.drawing_process = True
 
 #		draw_grid(1000);
 		glPushMatrix()
@@ -590,21 +591,55 @@ class Manipulator:
 		#draw_grid(1000);
 
 		self.draw_end()
-		
 		glPopMatrix()
-		
+
+		self.drawing_process = False		
 		
 	def set_pos(self, x_pos):
 		self.position[0] = x_pos
 		
 
 	def setConfig(self, config):
-			
+		while self.drawing_process == True:
+			pass
 		for idx, val in enumerate(self.driven_joints):
 			if len(config)>idx:
 				val.q = config[idx]
 				val.calcHMatrix()
+	
+	def startUpdateConfigByDBTread(self):
+		self.update_config_by_db_thread = threading.Thread(target = self.updateConfigByDBTreadFunct,)
+		self.update_config_by_db_thread.deamon = True
+		self.update_config_by_db_thread.start()		
+	
+	def updateConfigByDBTreadFunct(self):
+		while True:
+			self.updateConfigByDB()
+		#	time.sleep(0.02)
+	
+	def updateConfigByDB(self):
+		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
+		cursor = conn.cursor()
+		
+		col_name_list = self.driven_joints_name
+		col_name_str = "`{0}`".format(col_name_list[0])
+		for i in col_name_list[1:]:
+			col_name_str += ", `{0}`".format(i)
+		query_str = "SELECT {0}, `stick_in_hand` FROM {2} WHERE (id = {1})".format(col_name_str, id, CONFIGURATION_TABLE)
+#		print query_str
+		cursor.execute(query_str)
+		# Получаем данные.
+		row = cursor.fetchone()
+		self.setConfig(row[:len(row)-1])
 
+		conn.close()
+		
+		if row[len(row)-1]:
+			self.hanger_joints[0].pick_up()
+		else:
+			self.hanger_joints[0].mount()
+
+		self.calc_kinematics()
 			
 	def getConfig(self):
 

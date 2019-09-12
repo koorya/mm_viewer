@@ -64,7 +64,7 @@ conf[1] = 617
 
 manip.setConfig(conf)
 manip.setActiveField(field)
-
+manip.startUpdateConfigByDBTread()
 
 #target_x, target_y, target_z, target_theta, target_phi
 
@@ -77,35 +77,6 @@ call_cnt = 0
 
 def timercallback(value):
 	global manip, mode, conn, time_stamp, call_cnt, id, field
-
-
-
-	if mode== 'sql':	
-#		conn = MySQLdb.connect('localhost', 'user1', 'vbtqjpxe', 'my_new_schema')
-		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
-		cursor = conn.cursor()
-		
-		col_name_list = manip.driven_joints_name
-		col_name_str = "`{0}`".format(col_name_list[0])
-		for i in col_name_list[1:]:
-			col_name_str += ", `{0}`".format(i)
-		query_str = "SELECT {0}, `stick_in_hand` FROM {2} WHERE (id = {1})".format(col_name_str, id, CONFIGURATION_TABLE)
-#		print query_str
-		cursor.execute(query_str)
-		# Получаем данные.
-		row = cursor.fetchone()
-		manip.setConfig(row[:len(row)-1])
-		
-		
-		conn.close()
-		
-	
-		if row[len(row)-1]:
-			manip.hanger_joints[0].pick_up()
-		else:
-			manip.hanger_joints[0].mount()
-#		print row
-	manip.calc_kinematics()
 
 	call_cnt += 1
 	if (call_cnt % 500 == 0):
