@@ -127,21 +127,7 @@ class Body(Hanger_Component):
 	def set_vertex_list(self, v_list):
 		
 		
-#		orig_stdout = sys.stdout
-#		f = open('log.txt', 'w')
-#		sys.stdout = f
-
 		a = np.array(v_list[0]).ravel()
-		print "start a"
-		print a
-		print "end a"
-		print "start v_list[0]"
-		print np.array(v_list[0])
-		print "endv_list[0]"
-#		sys.stdout = orig_stdout
-#		f.close()
-		print a.reshape(-1, 4)
-#		exit()
 		b = np.array(v_list[1]).ravel()
 		c = np.array(v_list[2]).ravel()
 		vertexes = np.transpose(np.transpose(a.reshape(-1, 4))[:-1]).ravel()
@@ -231,7 +217,7 @@ class Body(Hanger_Component):
 		# Первый параметр - какой тип примитивов использовать (треугольники, точки, линии и др.)
 		# Второй параметр - начальный индекс в указанных массивах
 		# Третий параметр - количество рисуемых объектов (в нашем случае это 3 вершины - 9 координат)
-		glDrawArrays(GL_TRIANGLES, 0, len(self.vertexes)/3)
+		glDrawArrays(GL_LINE_STRIP, 0, len(self.vertexes)/3) #GL_TRIANGLES GL_POINTS GL_LINE_STRIP
 		glDisableClientState(GL_VERTEX_ARRAY)           # Отключаем использование массива вершин
 		glDisableClientState(GL_NORMAL_ARRAY)           # Отключаем использование массива вершин
 		glDisableClientState(GL_COLOR_ARRAY) 

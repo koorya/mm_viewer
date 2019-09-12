@@ -50,7 +50,7 @@ floor2 = FilledFloor((0.0, 0.0, -636.5 - 3000.0), (0.0, 0.0, 1.0), 0.0)
 #floor2 = Floor((0.0, 0.0, -636.5 - 3000.0), (0.0, 0.0, 1.0), 0.0)
 field = FieldDB((0.0, 0.0, 0.0), (0.0, 0.0, 1.0), 0.0)
 #field.append_child(floor1)
-#field.append_child(floor2)
+field.append_child(floor2)
 
 #field.append_child(LinkSloped((-1750, 0, 0), (1, 0, 0), 180.0))
 

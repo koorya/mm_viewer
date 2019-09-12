@@ -43,56 +43,59 @@ def getCylinVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
 # # getCylinVertexArray
 
 	
-	#vertexes, normals, nVert = fghGenerateCylinder(size/2., size, 5, 5)
+	vertexes, normals, nVert = fghGenerateCylinder(size/2., size, 20, 15)
+	
 
 
-	#print vertexes
-	# exit()
+#	print vertexes
+#	exit()
 
+	# size *= 0.5;
+	# v1 = [ size,  size,  size]
+	# v2 = [ size, -size,  size]
+	# v3 = [-size,  size,  size]
+	# v4 = [-size, -size,  size]
+	# v5 = [ size,  size, -size]
+	# v6 = [ size, -size, -size]
+	# v7 = [-size,  size, -size]
+	# v8 = [-size, -size, -size]
 	
-	size *= 0.5;
-	v1 = [ size,  size,  size]
-	v2 = [ size, -size,  size]
-	v3 = [-size,  size,  size]
-	v4 = [-size, -size,  size]
-	v5 = [ size,  size, -size]
-	v6 = [ size, -size, -size]
-	v7 = [-size,  size, -size]
-	v8 = [-size, -size, -size]
 	
+	# n1 = [ 0.,  0.,  1.]
+	# n2 = [ 0.,  0., -1.]
+	# n3 = [-1.,  0.,  0.]
+	# n4 = [ 1.,  0.,  0.]
+	# n5 = [ 0.,  1.,  0.]
+	# n6 = [ 0., -1.,  0.]
 	
-	n1 = [ 0.,  0.,  1.]
-	n2 = [ 0.,  0., -1.]
-	n3 = [-1.,  0.,  0.]
-	n4 = [ 1.,  0.,  0.]
-	n5 = [ 0.,  1.,  0.]
-	n6 = [ 0., -1.,  0.]
-	
-	vertexes = np.array([	v3, v1, v2, 
-							v3, v2, v4, 
-							v7, v5, v6, 
-							v7, v6, v8, 
+	# vertexes = np.array([	v3, v1, v2, 
+							# v3, v2, v4, 
+							# v7, v5, v6, 
+							# v7, v6, v8, 
 							
-							v7, v4, v8, 
-							v7, v4, v3, 
-							v1, v6, v5, 
-							v1, v6, v2, 
-							v3, v5, v1, 
-							v3, v5, v7, 
-							v4, v6, v2, 
-							v4, v6, v8 ])
+							# v7, v4, v8, 
+							# v7, v4, v3, 
+							# v1, v6, v5, 
+							# v1, v6, v2, 
+							# v3, v5, v1, 
+							# v3, v5, v7, 
+							# v4, v6, v2, 
+							# v4, v6, v8 ])
 							
 					
 							
-	normals = np.array(([n1]*3)*2 + 
-						([n2]*3)*2 +
-						([n3]*3)*2 +
-						([n4]*3)*2 +
-						([n5]*3)*2 +
-						([n6]*3)*2 )
+	# normals = np.array(([n1]*3)*2 + 
+						# ([n2]*3)*2 +
+						# ([n3]*3)*2 +
+						# ([n4]*3)*2 +
+						# ([n5]*3)*2 +
+						# ([n6]*3)*2 )
 	
+	# print "\n\nin getfunct cil ravel vertexes start\n",np.array(vertexes).ravel(),"\nin getfunct cil ravel vertexes end\n\n"
+	# print "\n\ncube ravel vertexes start\n",np.array(vertexes).ravel(),"\ncube ravel vertexes end\n\n"
 	
-	vertexes = np.array(vertexes).ravel().reshape(-1, 3)						
+	vertexes = np.array(vertexes).ravel().reshape(-1, 3)	
+
 	vertexes = np.vstack([np.hstack((a,[1.])) for a in vertexes])		
 	
 	normals = np.array(normals).ravel().reshape(-1, 3)	
@@ -104,11 +107,13 @@ def getCylinVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
 	
 	c = np.linalg.norm(normals, axis = 1)
 	normals = normals / np.array([[v]*3+[1] for v in c])	
-
-	return [[vertexes[:]], [normals[:]], [np.array([color]*len(vertexes))]]	
+	ret = [vertexes.ravel().tolist(), normals.ravel().tolist(), np.array([color]*len(vertexes)).ravel().tolist()]	
+#	print "\n\n\nret\n", ret[0]
+	return ret
 	
 	
 def getCubeVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
+#	return [[],[],[]]
 	size *= 0.5;
 	v1 = [ size,  size,  size]
 	v2 = [ size, -size,  size]
@@ -164,8 +169,10 @@ def getCubeVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
 	
 	c = np.linalg.norm(normals, axis = 1)
 	normals = normals / np.array([[v]*3+[1] for v in c])	
-
-	return [[vertexes[:]], [normals[:]], [np.array([color]*len(vertexes))]]	
+	ret = [vertexes.ravel().tolist(), normals.ravel().tolist(), np.array([color]*len(vertexes)).ravel().tolist()]	
+#	print "\n\n\nret\n", ret[0]
+	return ret
+#	return [[vertexes[:]], [normals[:]], [np.array([color]*len(vertexes))]]	
 	
 	
 	
