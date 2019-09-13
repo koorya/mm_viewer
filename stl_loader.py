@@ -25,7 +25,7 @@ class Loaded_Model(Mounted_Component):
 
 	
 	def load_model(self, file_name = 'models/test.stl'):
-#		return
+		return
 		f = open(file_name)
 		if f.read(5) != "solid":
 			f.close()
