@@ -174,17 +174,9 @@ def mouse_wheel_funct(button, dir, x, y):
 	# print "key_t: %i"%key_t
 	# print "theta: %i"%target_theta,"phi: %i"%target_phi 
 
-	if key_t == 1:
-		res_pos = manip.getTarget() + add_pos
-
-		conf = manip.getConfigByTarget(res_pos)
-		
-		manip.setConfig(conf)
-		# print "position: ",res_pos
-		# print "config:", conf
-
-	else:
+	if key_t != 1:
 		manip.setConfig(add_config)
+		manip.calc_kinematics()
 		
 #	glutPostRedisplay()
 
