@@ -8,6 +8,7 @@ import numpy as np
 # this comment is on both repo
 
 import struct
+import threading
 
 class Loaded_Model(Mounted_Component):
 	model = []
@@ -16,11 +17,15 @@ class Loaded_Model(Mounted_Component):
 	colors = []
 	color = (0.25, 0.35, 0.25, 0.9)
 	program = None
+	load_complete = False
 	def __init__(self, file_name = None, color = "#a55505"):
 		self.color = list(1.*int(color[i:i+2], 16)/0xff for i in (1, 3, 5))
 		self.color.append(0.8)
 		if not file_name is None:
-			self.load_model(file_name)
+			self.load_thread = threading.Thread(target = self.load_model, args = (file_name,))
+			self.load_thread.deamon = True
+			self.load_thread.start()
+#			self.load_model(file_name)
 
 
 	
@@ -30,8 +35,8 @@ class Loaded_Model(Mounted_Component):
 		if f.read(5) != "solid":
 			f.close()
 			self.load_model_bin(file_name)
+			self.load_complete = True
 			return 
-			
 		state = "start"
 		a, b, c = (0., 0., 0.)
 
@@ -57,6 +62,7 @@ class Loaded_Model(Mounted_Component):
 					state = word
 		self.transform_vertex_array()
 		self.model = []
+		self.load_complete = True
 
 	def load_model_bin(self, file_name = 'models/Component1.stl'):
 	
@@ -135,6 +141,8 @@ class Loaded_Model(Mounted_Component):
 		glEnd()
 
 	def draw(self):
+		if not self.load_complete:
+			return
 	#	print self.colors
 		if self.program is None:
 			try:
