@@ -43,7 +43,7 @@ def getCylinVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
 # # getCylinVertexArray
 
 	
-	vertexes, normals, nVert = fghGenerateCylinder(size/2., size, 20, 15)
+	vertexes, normals = fghGenerateCylinder(size/2., size, 20, 2)
 	
 
 

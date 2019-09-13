@@ -217,7 +217,7 @@ class Body(Hanger_Component):
 		# Первый параметр - какой тип примитивов использовать (треугольники, точки, линии и др.)
 		# Второй параметр - начальный индекс в указанных массивах
 		# Третий параметр - количество рисуемых объектов (в нашем случае это 3 вершины - 9 координат)
-		glDrawArrays(GL_LINE_STRIP, 0, len(self.vertexes)/3) #GL_TRIANGLES GL_POINTS GL_LINE_STRIP
+		glDrawArrays(GL_TRIANGLES, 0, len(self.vertexes)/3) #GL_TRIANGLES GL_POINTS GL_LINE_STRIP
 		glDisableClientState(GL_VERTEX_ARRAY)           # Отключаем использование массива вершин
 		glDisableClientState(GL_NORMAL_ARRAY)           # Отключаем использование массива вершин
 		glDisableClientState(GL_COLOR_ARRAY) 
@@ -518,7 +518,8 @@ class Column_Stock(BodyCil):
 		pass
 	def draw_self(self):
 		#return [[], [], []]
-		return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
+		return getCylinVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
+#		return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
 		glPushMatrix()
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
 #		glRotatef(45, 0, 0, 1)
