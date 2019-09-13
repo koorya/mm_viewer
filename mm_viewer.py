@@ -21,7 +21,6 @@ import threading
 
 np.set_printoptions(precision = 3)
 
-mode = 'sql'
 
 #conn = MySQLdb.connect('localhost', 'user2', 'vbtqjpxe', 'my_new_schema')
 conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
@@ -76,7 +75,7 @@ time_stamp = time.time()
 call_cnt = 0
 
 def timercallback(value):
-	global manip, mode, conn, time_stamp, call_cnt, id, field
+	global manip, conn, time_stamp, call_cnt, id, field
 
 	call_cnt += 1
 	if (call_cnt % 500 == 0):
