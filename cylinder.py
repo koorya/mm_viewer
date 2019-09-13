@@ -116,6 +116,21 @@ def fghGenerateCylinder(radius=0.5, height=1, slices=10, stacks=10):
 	
 	vertices_3 = []
 	normals_3 = []
+	top_v_3 = []
+	top_n_3 = []
+	bottom_v_3 = []
+	bottom_n_3 = []
+	for j in range(1, slices):
+		top_v_3 += vertices[0*3:0*3+3] + vertices[(j)*3:(j)*3+3] + vertices[(j+1)*3:(j+1)*3+3]
+		top_n_3 += normals[0*3:0*3+3] + normals[(j)*3:(j)*3+3] + normals[(j+1)*3:(j+1)*3+3]
+		bottom_v_3 += vertices[(slices*(stacks+3)+1)*3:(slices*(stacks+3)+1)*3+3] + vertices[(slices*(stacks+2)+j)*3:(slices*(stacks+2)+j)*3+3] + vertices[(slices*(stacks+2)+j+1)*3:(slices*(stacks+2)+j+1)*3+3]
+		bottom_n_3 += normals[(slices*(stacks+3)+1)*3:(slices*(stacks+3)+1)*3+3] + normals[(slices*(stacks+2)+j)*3:(slices*(stacks+2)+j)*3+3] + normals[(slices*(stacks+2)+j+1)*3:(slices*(stacks+2)+j+1)*3+3]
+	top_v_3 += vertices[0*3:0*3+3] + vertices[(slices)*3:(slices)*3+3] + vertices[(1)*3:(1)*3+3]
+	top_n_3 += normals[0*3:0*3+3] + normals[(slices)*3:(slices)*3+3] + normals[(1)*3:(1)*3+3]
+	bottom_v_3 += vertices[(slices*(stacks+3)+1)*3:(slices*(stacks+3)+1)*3+3] + vertices[(slices*(stacks+2)+slices)*3:(slices*(stacks+2)+slices)*3+3] + vertices[(slices*(stacks+2)+1)*3:(slices*(stacks+2)+1)*3+3]
+	bottom_n_3 += normals[(slices*(stacks+3)+1)*3:(slices*(stacks+3)+1)*3+3] + normals[(slices*(stacks+2)+slices)*3:(slices*(stacks+2)+slices)*3+3] + normals[(slices*(stacks+2)+1)*3:(slices*(stacks+2)+1)*3+3]
+	vertices_3 += top_v_3 + bottom_v_3
+	normals_3 += top_n_3 + bottom_n_3
 	ofset = slices+1
 	for i in range(stacks):
 		for j in range(slices-1):
@@ -129,5 +144,7 @@ def fghGenerateCylinder(radius=0.5, height=1, slices=10, stacks=10):
 		normals_3 += normals[cur_ofset*3:cur_ofset*3+3] + normals[(cur_ofset+slices)*3:(cur_ofset+slices)*3+3] + normals[(ofset+i*slices+slices)*3:(ofset+i*slices+slices)*3+3]
 		vertices_3 += vertices[cur_ofset*3:cur_ofset*3+3] + vertices[(ofset+i*slices+slices)*3:(ofset+i*slices+slices)*3+3] + vertices[(ofset+i*slices)*3:(ofset+i*slices)*3+3]
 		normals_3 += normals[cur_ofset*3:cur_ofset*3+3] + normals[(ofset+i*slices+slices)*3:(ofset+i*slices+slices)*3+3] + normals[(ofset+i*slices)*3:(ofset+i*slices)*3+3]		
+
+
 	return (vertices_3, normals_3)#/* output */
 #	return (vertices[ofset*3:(ofset+2*slices)*3], normals, nVert)#/* output */
