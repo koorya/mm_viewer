@@ -7,10 +7,14 @@ from OpenGL.GLU import *
 from OpenGL.GLUT import * 
 from opengl_drawing_tools import *
 from World_Components import *
+
+import sys
+
 from Constants import *
 
 import time
 import threading
+
 
 
 ###################################################################################		
@@ -105,10 +109,14 @@ class Body(Hanger_Component):
 
 	
 	def draw(self):
+
+		print "MAIN DRAW"
+
 #		if self.intersect_counter > 0:
 #			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.5, 0.0, 1.0))	
 #		else:
 #			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , (0.0, 0.0, 0.0, 1.0))	
+
 		vertex_list = self.draw_self()
 		ret = self.draw_children()
 		vertex_list[0] += ret[0]
@@ -117,10 +125,9 @@ class Body(Hanger_Component):
 		return vertex_list
 	
 	def set_vertex_list(self, v_list):
+		
+		
 		a = np.array(v_list[0]).ravel()
-		# print a
-		# print a.reshape(-1, 4)
-		# exit()
 		b = np.array(v_list[1]).ravel()
 		c = np.array(v_list[2]).ravel()
 		vertexes = np.transpose(np.transpose(a.reshape(-1, 4))[:-1]).ravel()
@@ -210,7 +217,7 @@ class Body(Hanger_Component):
 		# Первый параметр - какой тип примитивов использовать (треугольники, точки, линии и др.)
 		# Второй параметр - начальный индекс в указанных массивах
 		# Третий параметр - количество рисуемых объектов (в нашем случае это 3 вершины - 9 координат)
-		glDrawArrays(GL_TRIANGLES, 0, len(self.vertexes)/3)
+		glDrawArrays(GL_TRIANGLES, 0, len(self.vertexes)/3) #GL_TRIANGLES GL_POINTS GL_LINE_STRIP
 		glDisableClientState(GL_VERTEX_ARRAY)           # Отключаем использование массива вершин
 		glDisableClientState(GL_NORMAL_ARRAY)           # Отключаем использование массива вершин
 		glDisableClientState(GL_COLOR_ARRAY) 
@@ -335,6 +342,7 @@ class FieldDB(Field):
 			self.updateByDB()
 		
 	def updateByDB(self):
+
 		conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 		cursor = conn.cursor()
 
@@ -364,7 +372,9 @@ class FieldDB(Field):
 
 			conn = MySQLdb.connect('172.16.0.77', 'user1', 'vbtqjpxe', DATABASE_NAME)
 			cursor = conn.cursor()
+
 			query_str = "SELECT `id`, `pos_x`, `pos_y`, `pos_z`, `dir_x`, `dir_y`, `dir_z`, `angle`, `type` FROM {1} WHERE id IN ({0})".format(id_str, LINK_AND_COLUMN_TABLE_NAME)
+
 			print query_str
 			cursor.execute(query_str)
 			conn.close()
@@ -455,7 +465,8 @@ class Link(BodyCil):
 	def draw_self(self):
 		#return [[], [], []]
 		
-		return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
+		return getCylinVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
+		#return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
 		glPushMatrix()
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
 #		glRotatef(45, 0, 0, 1)
@@ -507,7 +518,8 @@ class Column_Stock(BodyCil):
 		pass
 	def draw_self(self):
 		#return [[], [], []]
-		return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
+		return getCylinVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
+#		return getCubeVertexArray(self.fw_shape_matrix, (0.25, 0.25, 0.25, 0.9))
 		glPushMatrix()
 		glLoadMatrixf(np.transpose(self.fw_shape_matrix))	
 #		glRotatef(45, 0, 0, 1)

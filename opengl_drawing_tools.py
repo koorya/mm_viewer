@@ -3,6 +3,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import * 
 from OpenGL.GLUT import * 
 import numpy as np
+from cylinder import *
 
 treecolor = (1.0, 1.0, 1.0, 1.0)
 green_color = (0.0, 1.0, 0.0, 1.0)
@@ -36,23 +37,101 @@ def draw_grid(size):
 	glVertex3f(0.0, 0.0, size)
 	glEnd()
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION , black_color)	
+
+
+def getCylinVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
+# # getCylinVertexArray
+
+	
+	vertexes, normals = fghGenerateCylinder(size/2., size, 20, 2)
+	
+
+
+#	print vertexes
+#	exit()
+
+	# size *= 0.5;
+	# v1 = [ size,  size,  size]
+	# v2 = [ size, -size,  size]
+	# v3 = [-size,  size,  size]
+	# v4 = [-size, -size,  size]
+	# v5 = [ size,  size, -size]
+	# v6 = [ size, -size, -size]
+	# v7 = [-size,  size, -size]
+	# v8 = [-size, -size, -size]
+	
+	
+	# n1 = [ 0.,  0.,  1.]
+	# n2 = [ 0.,  0., -1.]
+	# n3 = [-1.,  0.,  0.]
+	# n4 = [ 1.,  0.,  0.]
+	# n5 = [ 0.,  1.,  0.]
+	# n6 = [ 0., -1.,  0.]
+	
+	# vertexes = np.array([	v3, v1, v2, 
+							# v3, v2, v4, 
+							# v7, v5, v6, 
+							# v7, v6, v8, 
+							
+							# v7, v4, v8, 
+							# v7, v4, v3, 
+							# v1, v6, v5, 
+							# v1, v6, v2, 
+							# v3, v5, v1, 
+							# v3, v5, v7, 
+							# v4, v6, v2, 
+							# v4, v6, v8 ])
+							
+					
+							
+	# normals = np.array(([n1]*3)*2 + 
+						# ([n2]*3)*2 +
+						# ([n3]*3)*2 +
+						# ([n4]*3)*2 +
+						# ([n5]*3)*2 +
+						# ([n6]*3)*2 )
+	
+	# print "\n\nin getfunct cil ravel vertexes start\n",np.array(vertexes).ravel(),"\nin getfunct cil ravel vertexes end\n\n"
+	# print "\n\ncube ravel vertexes start\n",np.array(vertexes).ravel(),"\ncube ravel vertexes end\n\n"
+	
+	vertexes = np.array(vertexes).ravel().reshape(-1, 3)	
+
+	vertexes = np.vstack([np.hstack((a,[1.])) for a in vertexes])		
+	
+	normals = np.array(normals).ravel().reshape(-1, 3)	
+	normals = np.vstack([np.hstack((a,[0.])) for a in normals])
+	
+	vertexes = np.array([matrix.dot(vertex) for vertex in vertexes])
+
+	normals = np.array([matrix.dot(normal) for normal in normals])
+	
+	c = np.linalg.norm(normals, axis = 1)
+	normals = normals / np.array([[v]*3+[1] for v in c])	
+	ret = [vertexes.ravel().tolist(), normals.ravel().tolist(), np.array([color]*len(vertexes)).ravel().tolist()]	
+#	print "\n\n\nret\n", ret[0]
+	return ret
+	
 	
 def getCubeVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
+#	return [[],[],[]]
 	size *= 0.5;
-	v1 = [size, size, size, 1.]
-	v2 = [size, -size, size, 1.]
-	v3 = [-size, size, size, 1.]
-	v4 = [-size, -size, size, 1.]
-	v5 = [size, size, -size, 1.]
-	v6 = [size, -size, -size, 1.]
-	v7 = [-size, size, -size, 1.]
-	v8 = [-size, -size, -size, 1.]
-	n1 = [0., 0., 1., 0.]
-	n2 = [0., 0., -1., 0.]
-	n3 = [-1., 0., 0., 0.]
-	n4 = [1., 0., 0., 0.]
-	n5 = [0., 1., 0., 0.]
-	n6 = [0., -1., 0., 0.]
+	v1 = [ size,  size,  size]
+	v2 = [ size, -size,  size]
+	v3 = [-size,  size,  size]
+	v4 = [-size, -size,  size]
+	v5 = [ size,  size, -size]
+	v6 = [ size, -size, -size]
+	v7 = [-size,  size, -size]
+	v8 = [-size, -size, -size]
+	
+	
+	n1 = [ 0.,  0.,  1.]
+	n2 = [ 0.,  0., -1.]
+	n3 = [-1.,  0.,  0.]
+	n4 = [ 1.,  0.,  0.]
+	n5 = [ 0.,  1.,  0.]
+	n6 = [ 0., -1.,  0.]
+	
 	vertexes = np.array([	v3, v1, v2, 
 							v3, v2, v4, 
 							v7, v5, v6, 
@@ -66,6 +145,9 @@ def getCubeVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
 							v3, v5, v7, 
 							v4, v6, v2, 
 							v4, v6, v8 ])
+							
+					
+							
 	normals = np.array(([n1]*3)*2 + 
 						([n2]*3)*2 +
 						([n3]*3)*2 +
@@ -73,22 +155,24 @@ def getCubeVertexArray(matrix, color = [0.1, 0.2, 0.1, 0.8], size = 1):
 						([n5]*3)*2 +
 						([n6]*3)*2 )
 	
-	# vertexes = np.array([	v3, v2, v1, v3, v2, v4 ])
-	# normals = np.array(([n1]*3)*2)
-						
-			
-#	print vertexes		
-#	vertexes = vertexes.dot(np.array([[1000., 0., 0., 0.], [0., 1000., 0., 0.], [0., 0., 1000., 0.], [0., 0., 0., 1.]]))
-#	print matrix
+	
+	vertexes = np.array(vertexes).ravel().reshape(-1, 3)						
+	vertexes = np.vstack([np.hstack((a,[1.])) for a in vertexes])		
+	
+	normals = np.array(normals).ravel().reshape(-1, 3)	
+	normals = np.vstack([np.hstack((a,[0.])) for a in normals])
+
+
 	vertexes = np.array([matrix.dot(vertex) for vertex in vertexes])
-#	print vertexes
-#	exit()
+
 	normals = np.array([matrix.dot(normal) for normal in normals])
 	
 	c = np.linalg.norm(normals, axis = 1)
 	normals = normals / np.array([[v]*3+[1] for v in c])	
-#	print vertexes
-	return [[vertexes[:]], [normals[:]], [np.array([color]*36)]]	
+	ret = [vertexes.ravel().tolist(), normals.ravel().tolist(), np.array([color]*len(vertexes)).ravel().tolist()]	
+#	print "\n\n\nret\n", ret[0]
+	return ret
+#	return [[vertexes[:]], [normals[:]], [np.array([color]*len(vertexes))]]	
 	
 	
 	
